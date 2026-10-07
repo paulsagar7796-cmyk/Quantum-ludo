@@ -1,5 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 
+const PAIRING_CODE = /^QL[12]\./i;
+
+type Detect = (video: HTMLVideoElement) => Promise<string | null>;
+
+interface NativeBarcodeDetector {
+  detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>;
+}
+type BarcodeDetectorClass = {
+  new (opts: { formats: string[] }): NativeBarcodeDetector;
+  getSupportedFormats: () => Promise<string[]>;
+};
+
+/**
+ * Prefers the browser's built-in QR reader (fast and forgiving, e.g. Chrome on Android);
+ * falls back to jsQR, loaded on demand, on browsers without one (e.g. Safari).
+ */
+async function makeDetector(): Promise<Detect> {
+  const Native = (globalThis as { BarcodeDetector?: BarcodeDetectorClass }).BarcodeDetector;
+  if (Native && (await Native.getSupportedFormats().catch((): string[] => [])).includes("qr_code")) {
+    const detector = new Native({ formats: ["qr_code"] });
+    return async (video) => (await detector.detect(video).catch(() => []))[0]?.rawValue ?? null;
+  }
+  const { default: jsQR } = await import("jsqr");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  return async (video) => {
+    // Up to 1280 px wide: enough detail for a QR code held up to the camera, still fast.
+    const scale = Math.min(1, 1280 / video.videoWidth);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    return jsQR(img.data, img.width, img.height, { inversionAttempts: "attemptBoth" })?.data ?? null;
+  };
+}
+
 /**
  * Reads a pairing code with the camera, or lets the player paste it.
  * The camera needs a secure page (https or localhost); otherwise only pasting is offered.
@@ -21,14 +57,15 @@ export function QrScanner({ label, onCode, busy }: { label: string; onCode: (cod
     let stream: MediaStream | null = null;
     let raf = 0;
     let stopped = false;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     (async () => {
       try {
-        const [{ default: jsQR }, media] = await Promise.all([
-          import("jsqr"),
-          navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }),
+        const [detect, media] = await Promise.all([
+          makeDetector(),
+          navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false,
+          }),
         ]);
         stream = media;
         if (stopped || !video.current) return media.getTracks().forEach((t) => t.stop());
@@ -36,23 +73,22 @@ export function QrScanner({ label, onCode, busy }: { label: string; onCode: (cod
         await video.current.play();
         setCamera("on");
         let last = 0;
+        let busy = false;
         const tick = (now: number) => {
           if (stopped) return;
           raf = requestAnimationFrame(tick);
           const v = video.current;
-          if (!v || !ctx || now - last < 150 || v.videoWidth === 0) return;
+          if (!v || busy || now - last < 120 || v.videoWidth === 0) return;
           last = now;
-          // Scan a downscaled frame: plenty for a QR code held up to the camera.
-          const scale = Math.min(1, 720 / v.videoWidth);
-          canvas.width = Math.round(v.videoWidth * scale);
-          canvas.height = Math.round(v.videoHeight * scale);
-          ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-          const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const found = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
-          if (found?.data.startsWith("QL1.")) {
-            stopped = true;
-            onCodeRef.current(found.data);
-          }
+          busy = true;
+          void detect(v)
+            .then((text) => {
+              if (!stopped && text && PAIRING_CODE.test(text)) {
+                stopped = true;
+                onCodeRef.current(text);
+              }
+            })
+            .finally(() => (busy = false));
         };
         raf = requestAnimationFrame(tick);
       } catch (e) {
@@ -98,7 +134,7 @@ export function QrScanner({ label, onCode, busy }: { label: string; onCode: (cod
         <textarea
           value={pasted}
           onChange={(e) => setPasted(e.target.value)}
-          placeholder="QL1.…"
+          placeholder="QL2.…"
           className="h-20 rounded-lg border border-line bg-panel-2 p-2 font-mono text-xs"
         />
       </label>

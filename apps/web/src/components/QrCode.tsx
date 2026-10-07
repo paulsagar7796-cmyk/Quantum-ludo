@@ -10,7 +10,8 @@ export function QrCode({ code, label }: { code: string; label: string }) {
     let cancelled = false;
     // Loaded on demand so the QR library isn't part of the main download.
     void import("qrcode").then(({ toDataURL }) =>
-      toDataURL(code, { errorCorrectionLevel: "L", margin: 2, width: 480 }).then((url) => !cancelled && setSrc(url)),
+      // Short codes leave room for stronger error correction and a proper quiet zone: both help phone cameras.
+      toDataURL(code, { errorCorrectionLevel: "M", margin: 4, width: 480 }).then((url) => !cancelled && setSrc(url)),
     );
     return () => {
       cancelled = true;

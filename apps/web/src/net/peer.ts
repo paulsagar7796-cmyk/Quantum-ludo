@@ -1,4 +1,4 @@
-import { decodeSignal, encodeSignal } from "./codec";
+import { decodePairing, encodePairing } from "./codec";
 import type { AnswerPayload, OfferPayload } from "./protocol";
 
 /**
@@ -41,12 +41,12 @@ export async function createInvite(seat: number, hostName: string): Promise<Host
   await pc.setLocalDescription(await pc.createOffer());
   await gatherCandidates(pc);
   const payload: OfferPayload = { k: "offer", sdp: pc.localDescription!.sdp, seat, hostName };
-  return { pc, channel, code: await encodeSignal(payload) };
+  return { pc, channel, code: await encodePairing(payload) };
 }
 
 /** Host side, step 2: accept the guest's reply code. Returns the guest's name. */
 export async function acceptReply(invite: HostInvite, replyCode: string, seat: number): Promise<string> {
-  const reply = await decodeSignal<AnswerPayload>(replyCode);
+  const reply = await decodePairing(replyCode);
   if (reply.k !== "answer") throw new Error("That is an invite code. Scan the reply shown on the guest's screen.");
   if (reply.seat !== seat) throw new Error("That reply belongs to a different seat.");
   await invite.pc.setRemoteDescription({ type: "answer", sdp: reply.sdp });
@@ -64,7 +64,7 @@ export interface GuestJoin {
 
 /** Guest side: read the host's invite and produce the reply code. */
 export async function answerInvite(inviteCode: string, name: string): Promise<GuestJoin> {
-  const offer = await decodeSignal<OfferPayload>(inviteCode);
+  const offer = await decodePairing(inviteCode);
   if (offer.k !== "offer") throw new Error("That is a reply code. Scan the invite on the host's screen.");
   const pc = newConnection();
   const channel = new Promise<RTCDataChannel>((resolve) => {
@@ -74,7 +74,7 @@ export async function answerInvite(inviteCode: string, name: string): Promise<Gu
   await pc.setLocalDescription(await pc.createAnswer());
   await gatherCandidates(pc);
   const payload: AnswerPayload = { k: "answer", sdp: pc.localDescription!.sdp, seat: offer.seat, name };
-  return { pc, channel, code: await encodeSignal(payload), seat: offer.seat, hostName: offer.hostName };
+  return { pc, channel, code: await encodePairing(payload), seat: offer.seat, hostName: offer.hostName };
 }
 
 /** Resolves when the channel is open, rejects if it closes or times out first. */

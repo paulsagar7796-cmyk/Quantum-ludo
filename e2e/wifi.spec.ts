@@ -28,7 +28,7 @@ async function act(page: Page) {
 async function readCode(page: Page, label: string): Promise<string> {
   await page.getByRole("button", { name: "Show text" }).click();
   const box = page.getByRole("textbox", { name: `${label} (text)` });
-  await expect(box).toHaveValue(/^QL1\./);
+  await expect(box).toHaveValue(/^QL2\.[A-Z2-7]+$/);
   return box.inputValue();
 }
 
