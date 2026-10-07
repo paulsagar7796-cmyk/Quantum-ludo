@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 5199;
+// Separate from the dev server (5199) so tests run while you play.
+const PORT = 5198;
 
 export default defineConfig({
   testDir: "e2e",
