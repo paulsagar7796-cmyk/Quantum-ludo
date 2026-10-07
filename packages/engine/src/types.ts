@@ -29,6 +29,8 @@ export interface Rules {
   unspentQCap: number;
   /** Owner turns a superposition may stay open: 1 = must collapse at the next turn, 2 = may hold once. */
   splitMaxTurns: number;
+  /** Force costs no Q when its target belongs to the current race leader (a catch-up tool). */
+  freeForceOnLeader: boolean;
   /** Bonus by finishing place: index 0 = first player to get all tokens home. */
   finishBonus: number[];
 }
@@ -138,7 +140,7 @@ export type GameEvent =
   | { type: "superposed"; seat: number; token: number; markers: [number, number] }
   | { type: "held"; seat: number; token: number; turnsLeft: number }
   | { type: "collapsed"; seat: number; token: number; to: number; cause: CollapseCause }
-  | { type: "observed"; seat: number; target: TokenRef; mode: ObservationMode }
+  | { type: "observed"; seat: number; target: TokenRef; mode: ObservationMode; free: boolean }
   | { type: "entangled"; seat: number; tokens: [number, number] }
   | { type: "decoupled"; seat: number; reason: "choice" | "homeColumn" | "capture" }
   | { type: "knockback"; seat: number; token: number; from: number; to: number }

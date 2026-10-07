@@ -45,7 +45,7 @@ export const MECHANIC: Record<Mechanic, { name: string; verb: string; hint: stri
   observe: {
     name: "Force",
     verb: "Force",
-    hint: "Free action. Collapse an opponent's split token now.",
+    hint: "Free action. Collapse an opponent's split token now. 1 Q, or no Q on the race leader's tokens.",
     color: "#f472b6",
   },
 };

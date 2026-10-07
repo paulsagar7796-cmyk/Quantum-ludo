@@ -63,7 +63,7 @@ export function describe(
     case "observed":
       return {
         seat: e.seat,
-        text: `${name(e.seat)} used Force on ${name(e.target.seat) === "You" ? "you" : name(e.target.seat)}`,
+        text: `${name(e.seat)} used Force on ${name(e.target.seat) === "You" ? "you" : name(e.target.seat)}${e.free ? " (free: leader)" : ""}`,
         tone: "quantum",
       };
     case "entangled":

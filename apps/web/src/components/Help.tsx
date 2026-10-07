@@ -29,7 +29,7 @@ export function Help({ onClose }: { onClose: () => void }) {
           <p>
             You start with 1 Q and hold up to 4. Land exactly on a glowing Node (the safe squares) to gain 1 Q; a Node
             then rests until the next round. You also get 1 Q when one of your tokens is captured. Every quantum action
-            costs 1 Q.
+            costs 1 Q, except that Force is free on the race leader’s tokens (look for the leader tag).
           </p>
         </section>
         <section className="grid gap-2 sm:grid-cols-2">

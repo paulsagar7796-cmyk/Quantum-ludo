@@ -57,5 +57,6 @@ export const DEFAULT_RULES: Rules = {
   squaresPerProgressPoint: 5,
   unspentQCap: 2,
   splitMaxTurns: 2,
+  freeForceOnLeader: true,
   finishBonus: [15, 8, 4],
 };

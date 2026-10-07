@@ -15,6 +15,12 @@ suite("move log text", () => {
     );
   });
 
+  it("marks a free Force on the leader", () => {
+    expect(
+      describe({ type: "observed", seat: 1, target: { seat: 0, token: 0 }, mode: "choice", free: true }, name)?.text,
+    ).toBe("The Racer used Force on you (free: leader)");
+  });
+
   it("skips bookkeeping events", () => {
     expect(describe({ type: "qSpent", seat: 0, mechanic: "ghost" }, name)).toBeNull();
     expect(describe({ type: "turnStart", seat: 0, round: 1, bonus: false }, name)).toBeNull();

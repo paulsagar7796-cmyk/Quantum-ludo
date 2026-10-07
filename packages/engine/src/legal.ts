@@ -1,5 +1,6 @@
 import { absSquare, destination, hasOpposingPresence, isOnTrack, pathClear } from "./board";
 import { ENTRY_ROLL, HOME_POS, LAST_TRACK_POS, YARD } from "./constants";
+import { raceLeader } from "./scoring";
 import type { Action, GameState, MarkerIndex, PlayerState } from "./types";
 
 export function currentPlayer(state: GameState): PlayerState {
@@ -67,6 +68,11 @@ function canEntangle(player: PlayerState, token: number): boolean {
   return t.split === null && isOnTrack(t.pos);
 }
 
+/** Force costs nothing when aimed at the current race leader (if that rule is on). */
+export function forceIsFree(state: GameState, targetSeat: number): boolean {
+  return state.config.rules.freeForceOnLeader && raceLeader(state) === targetSeat;
+}
+
 /** Actions that use up the current roll. Link and Force are free actions taken before you move. */
 const ROLL_CONSUMING = new Set<Action["type"]>(["move", "ghost", "superpose", "pass"]);
 
@@ -118,16 +124,19 @@ export function legalActions(state: GameState): Action[] {
         }
       }
     }
-    if (!state.flags.observed) {
-      for (const opp of state.players) {
-        if (opp.seat === player.seat) continue;
-        opp.tokens.forEach((t, i) => {
-          if (!t.split) return;
-          const target = { seat: opp.seat, token: i };
-          if (state.config.observationMode === "coin") out.push({ type: "observe", target });
-          else for (const marker of [0, 1] as MarkerIndex[]) out.push({ type: "observe", target, marker });
-        });
-      }
+  }
+
+  // Force: 1 Q, or free against the race leader's tokens.
+  if (!state.flags.observed) {
+    for (const opp of state.players) {
+      if (opp.seat === player.seat) continue;
+      if (player.q < 1 && !forceIsFree(state, opp.seat)) continue;
+      opp.tokens.forEach((t, i) => {
+        if (!t.split) return;
+        const target = { seat: opp.seat, token: i };
+        if (state.config.observationMode === "coin") out.push({ type: "observe", target });
+        else for (const marker of [0, 1] as MarkerIndex[]) out.push({ type: "observe", target, marker });
+      });
     }
   }
 

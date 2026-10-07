@@ -22,9 +22,9 @@ describe("sound cues", () => {
     expect(sounds(cuesFor([{ type: "superposed", seat: 0, token: 0, markers: [12, 15] }]))).toEqual(["split"]);
     expect(sounds(cuesFor([{ type: "entangled", seat: 0, tokens: [0, 1] }]))).toEqual(["link"]);
     expect(sounds(cuesFor([{ type: "moved", seat: 0, token: 0, from: 3, to: 7, via: "ghost" }]))).toEqual(["ghost"]);
-    expect(sounds(cuesFor([{ type: "observed", seat: 0, target: { seat: 1, token: 0 }, mode: "coin" }]))).toEqual([
-      "force",
-    ]);
+    expect(
+      sounds(cuesFor([{ type: "observed", seat: 0, target: { seat: 1, token: 0 }, mode: "coin", free: false }])),
+    ).toEqual(["force"]);
   });
 
   it("flips a coin on a marker hit, and whiffs on a miss", () => {
