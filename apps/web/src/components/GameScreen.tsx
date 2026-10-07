@@ -1,7 +1,9 @@
 import { mustCollapse, type Action, type GameEvent, type MarkerIndex } from "@qludo/engine";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { canLink, forceOptions, has, linkableTokens, tokenChoices, type TokenChoice } from "../game/interaction";
 import { COLOR_HEX, MECHANIC } from "../game/labels";
+import { effectsFor, type BoardEffect } from "../game/effects";
+import { addToHistory, recordFromState, type GameRecord } from "../game/history";
 import { pointFor } from "../game/layout";
 import type { GameController } from "../game/controller";
 import { sfx } from "../game/sound";
@@ -47,14 +49,21 @@ function SpeakerIcon({ on }: { on: boolean }) {
   );
 }
 
+function reducedMotion(): boolean {
+  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export function GameScreen({
   game: g,
   onLeave,
   onRematch,
   leaveText = "Your game is saved. You can resume it from the lobby.",
   toolbarExtra,
+  historyMode = "local",
 }: {
   game: GameController;
+  /** How this device takes part, for the match history. */
+  historyMode?: GameRecord["mode"];
   onLeave: () => void;
   /** Omitted when this device can't start a rematch (a guest). */
   onRematch?: () => void;
@@ -62,6 +71,16 @@ export function GameScreen({
   toolbarExtra?: ReactNode;
 }) {
   const { state, legal, dispatch, isHumanTurn, name } = g;
+
+  // Remember each finished game once, for the lobby's Stats.
+  const recorded = useRef<unknown>(null);
+  useEffect(() => {
+    if (!state.result || recorded.current === state.result) return;
+    recorded.current = state.result;
+    const bots = new Set(state.players.map((p) => p.seat).filter((s) => g.seatKind(s) === "bot"));
+    const record = recordFromState(state, { mode: historyMode, name, mine: g.localSeats, bots });
+    if (record) addToHistory(record);
+  }, [state, historyMode, name, g]);
   // Hot-seat with several humans on this device: hand it over at the start of each human turn.
   const humanCount = g.localSeats.size;
   const [readyTurn, setReadyTurn] = useState<number | null>(null);
@@ -406,6 +425,14 @@ export function GameScreen({
   });
 
   const callout = headline(g.lastEvents, name);
+  // Effects are worked out once per action (a new batch of events), so each animates exactly once.
+  const animate = !reducedMotion();
+  const [fx, setFx] = useState({ events: g.lastEvents, batch: 0, effects: [] as BoardEffect[] });
+  if (fx.events !== g.lastEvents) {
+    const batch = fx.batch + 1;
+    setFx({ events: g.lastEvents, batch, effects: animate ? effectsFor(g.lastEvents, state, batch) : [] });
+  }
+  const effects = fx.effects;
   const rollerColor = g.lastRoll ? COLOR_HEX[state.players[g.lastRoll.seat]!.color].base : "#94a3b8";
   const badge = (seat: number): string | null => {
     const kind = g.seatKind(seat);
@@ -488,6 +515,8 @@ export function GameScreen({
         <div className="relative flex min-h-0 flex-1 items-center justify-center">
           <Board
             state={state}
+            animate={animate}
+            effects={effects}
             selectable={selectableTokens ? { seat: me.seat, tokens: selectableTokens } : null}
             selected={mode === "link" ? linkFirst : sel}
             previews={previews}

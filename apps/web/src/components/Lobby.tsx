@@ -6,6 +6,7 @@ import { seatName, type BotSpeed, type MatchConfig, type SeatConfig } from "../g
 import type { SavedGame } from "../game/save";
 import { sfx } from "../game/sound";
 import { Help } from "./Help";
+import { Stats } from "./Stats";
 
 function Segmented<T extends string | number>({
   label,
@@ -105,6 +106,7 @@ export function Lobby({
 }) {
   const [m, setM] = useState<MatchConfig>(initial);
   const [showHelp, setShowHelp] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [soundOn, setSoundOn] = useState(sfx.enabled);
   const colors = SEAT_COLORS[m.playerCount];
   const hosting = m.seats.slice(0, m.playerCount).some((s) => s.kind === "remote");
@@ -252,15 +254,25 @@ export function Lobby({
         >
           Join a game on this Wi-Fi
         </button>
-        <button
-          type="button"
-          onClick={() => setShowHelp(true)}
-          className="min-h-11 rounded-xl border border-line bg-panel text-sm font-semibold hover:bg-panel-2"
-        >
-          How to play
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setShowHelp(true)}
+            className="min-h-11 flex-1 rounded-xl border border-line bg-panel text-sm font-semibold hover:bg-panel-2"
+          >
+            How to play
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowStats(true)}
+            className="min-h-11 flex-1 rounded-xl border border-line bg-panel text-sm font-semibold hover:bg-panel-2"
+          >
+            Stats
+          </button>
+        </div>
       </div>
       {showHelp && <Help onClose={() => setShowHelp(false)} />}
+      {showStats && <Stats onClose={() => setShowStats(false)} />}
     </div>
   );
 }

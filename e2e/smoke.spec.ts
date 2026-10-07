@@ -64,6 +64,13 @@ test("an all-bot game plays to the results screen", async ({ page }) => {
   await expect(results).toBeVisible({ timeout: 80_000 });
   await expect(results.getByRole("row")).toHaveCount(5); // header + 4 placements
   await expect(results.getByRole("button", { name: "Rematch" })).toBeVisible();
+
+  // The finished game shows up in the lobby's Stats (as watched: no player from this device).
+  await results.getByRole("button", { name: "New game" }).click();
+  await page.getByRole("button", { name: "Stats" }).click();
+  const stats = page.getByRole("dialog", { name: "Your stats" });
+  await expect(stats.getByText("Recent games")).toBeVisible();
+  await expect(stats.getByText("Spectated")).toBeVisible();
   expect(errors).toEqual([]);
 });
 

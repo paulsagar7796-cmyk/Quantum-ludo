@@ -266,6 +266,7 @@ function HostGame({
   return (
     <>
       <GameScreen
+        historyMode="host"
         game={g}
         onLeave={onExit}
         onRematch={onRematch}

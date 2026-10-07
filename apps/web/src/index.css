@@ -131,6 +131,65 @@ button:disabled {
   transform-origin: 50% 50%;
 }
 
+/* Board effects: bursts that play once where something happened. */
+.fx {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-fill-mode: both;
+}
+
+@keyframes fx-expand {
+  from {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-contract {
+  0% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-spark {
+  from {
+    transform: scale(0.4) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.5) rotate(30deg);
+    opacity: 0;
+  }
+}
+
+.fx-expand {
+  animation: fx-expand 650ms ease-out both;
+}
+
+.fx-contract {
+  animation: fx-contract 600ms ease-in both;
+}
+
+.fx-spark {
+  animation: fx-spark 700ms ease-out both;
+}
+
+.fx-slow {
+  animation-duration: 1000ms;
+}
+
 @keyframes fade {
   to {
     opacity: 0;
@@ -143,7 +202,8 @@ button:disabled {
   .node-glow,
   .turn-ring,
   .die-pop,
-  .die-tumble {
+  .die-tumble,
+  .fx {
     animation: none;
     transition: none;
   }

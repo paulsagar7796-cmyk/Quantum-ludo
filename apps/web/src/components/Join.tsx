@@ -159,6 +159,7 @@ function GuestView({ link, seat, onExit }: { link: Link; seat: number; onExit: (
   const me = g.state.players[seat];
   return (
     <GameScreen
+      historyMode="guest"
       game={{ ...g, state: g.state as GameState } as GameController}
       onLeave={onExit}
       leaveText="You will leave this game. The host can invite you again."

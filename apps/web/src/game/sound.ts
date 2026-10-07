@@ -36,7 +36,8 @@ export interface Cue {
   step?: number;
 }
 
-const HOP_GAP = 0.05;
+/** Seconds between hop sounds: one per square, in step with the board's hop animation (HOP_MS). */
+const HOP_GAP = 0.075;
 
 /** Maps the events of one action to a timeline of sounds. */
 export function cuesFor(events: GameEvent[], humanSeats: ReadonlySet<number> = new Set()): Cue[] {

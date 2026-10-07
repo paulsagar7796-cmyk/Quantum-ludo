@@ -10,6 +10,8 @@ import {
 import { memo, type ReactNode } from "react";
 import { COLOR_HEX, COLOR_SHAPE } from "../game/labels";
 import { GRID, HOME_COLUMN, TRACK, YARD_ORIGIN, centre, pointFor, pointKey, type Point } from "../game/layout";
+import type { BoardEffect, EffectKind } from "../game/effects";
+import { HOP_MS, useWalk } from "../game/useWalk";
 
 export type PreviewKind = "move" | "split" | "ghost";
 
@@ -29,6 +31,9 @@ export interface MarkerTarget {
 
 interface BoardProps {
   state: GameState;
+  /** Tokens hop square by square and effects play. Off for reduced motion. */
+  animate: boolean;
+  effects: BoardEffect[];
   /** Seat whose tokens can be tapped, and which of its tokens. */
   selectable: { seat: number; tokens: Set<number> } | null;
   selected: number | null;
@@ -83,6 +88,67 @@ function Star({ x, y }: Point) {
     return `${x + r * Math.cos(a)},${y + r * Math.sin(a)}`;
   }).join(" ");
   return <polygon points={pts} fill="#cbd5e1" opacity={0.55} />;
+}
+
+const FX_COLOR: Record<EffectKind, string> = {
+  capture: "#fb7185",
+  split: "#a78bfa",
+  ghost: "#e2e8f0",
+  force: "#f472b6",
+  node: "#c4b5fd",
+  home: "#facc15",
+  miss: "#94a3b8",
+};
+
+/** One burst of rings or sparks; the animation comes from CSS (fx-* classes in index.css). */
+function EffectShape({ kind, delayMs }: { kind: EffectKind; delayMs: number }) {
+  const c = FX_COLOR[kind];
+  const delay = (extra = 0) => ({ animationDelay: `${delayMs + extra}ms` });
+  if (kind === "node" || kind === "home") {
+    return (
+      <g className="fx fx-spark" style={delay()}>
+        {Array.from({ length: 8 }, (_, i) => {
+          const a = (Math.PI / 4) * i;
+          return (
+            <line
+              key={i}
+              x1={Math.cos(a) * 0.25}
+              y1={Math.sin(a) * 0.25}
+              x2={Math.cos(a) * 0.6}
+              y2={Math.sin(a) * 0.6}
+              stroke={c}
+              strokeWidth={0.07}
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </g>
+    );
+  }
+  return (
+    <>
+      <circle
+        r={0.5}
+        fill="none"
+        stroke={c}
+        strokeWidth={0.1}
+        className={kind === "force" ? "fx fx-contract" : "fx fx-expand"}
+        style={delay()}
+      />
+      {kind === "capture" && <circle r={0.5} fill={c} opacity={0.35} className="fx fx-expand" style={delay(120)} />}
+      {kind === "ghost" && (
+        <circle
+          r={0.5}
+          fill="none"
+          stroke={c}
+          strokeWidth={0.05}
+          strokeDasharray="0.1 0.1"
+          className="fx fx-expand fx-slow"
+          style={delay()}
+        />
+      )}
+    </>
+  );
 }
 
 /** Spread tokens that share a point so they stay tappable. */
@@ -170,8 +236,18 @@ function Static({ state }: { state: GameState }) {
 
 const StaticBoard = memo(Static, (a, b) => a.state.players.length === b.state.players.length);
 
-export function Board({ state, selectable, selected, previews, markerTargets, onTokenClick }: BoardProps) {
+export function Board({
+  state,
+  animate,
+  effects,
+  selectable,
+  selected,
+  previews,
+  markerTargets,
+  onTokenClick,
+}: BoardProps) {
   const current = state.players[state.current]!;
+  const walking = useWalk(state, animate);
 
   // Nodes: safe squares glow when they can pay out this round.
   const nodes = [...SAFE_SQUARES].map((sq) => {
@@ -194,7 +270,7 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
   });
 
   // Real tokens, grouped by the point they occupy.
-  type Placed = { seat: number; token: number; color: Color; point: Point; drifting: boolean };
+  type Placed = { seat: number; token: number; color: Color; point: Point; drifting: boolean; hop: number | null };
   const placed: Placed[] = [];
   const markers: { seat: number; token: number; color: Color; marker: MarkerIndex; point: Point }[] = [];
   for (const p of state.players) {
@@ -210,12 +286,14 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
           }),
         );
       } else {
+        const walkPos = walking(p.seat, i);
         placed.push({
           seat: p.seat,
           token: i,
           color: p.color,
-          point: pointFor(p.color, t.pos, i),
+          point: pointFor(p.color, walkPos ?? t.pos, i),
           drifting: t.drifting,
+          hop: walkPos,
         });
       }
     });
@@ -331,7 +409,11 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
           <g
             key={`tok-${t.seat}-${t.token}`}
             className="token"
-            style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${pos.scale})` }}
+            style={{
+              // Walking tokens hop: a quick step per square with a little bounce on every other one.
+              transform: `translate(${pos.x}px, ${pos.y}px) scale(${pos.scale * (t.hop !== null && t.hop % 2 ? 1.18 : 1)})`,
+              transitionDuration: t.hop !== null ? `${HOP_MS}ms` : undefined,
+            }}
             onClick={canTap ? () => onTokenClick(t.seat, t.token) : undefined}
             role={canTap ? "button" : undefined}
             aria-label={canTap ? `Token ${t.token + 1}` : undefined}
@@ -365,6 +447,13 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
           </g>
         );
       })}
+
+      {animate &&
+        effects.map((fx) => (
+          <g key={fx.id} transform={`translate(${fx.point.x} ${fx.point.y})`} className="pointer-events-none">
+            <EffectShape kind={fx.kind} delayMs={fx.delayMs} />
+          </g>
+        ))}
 
       {previews.map((p, i) => {
         const color = p.kind === "split" ? SPLIT_COLOR : p.kind === "ghost" ? "#e2e8f0" : "#f8fafc";

@@ -34,6 +34,10 @@ export interface Weights {
   opponent: number;
   /** Per opponent token our tokens can reach with one roll. */
   attack: number;
+  /** Extra weight on the leading opponent's standing (on top of the average). */
+  leader: number;
+  /** Value of the leader's tokens being exposed to anyone, not just us: sets up team-ups and Force. */
+  leaderThreat: number;
 }
 
 const REENTRY_COST = 8;
@@ -59,6 +63,20 @@ function threat(state: GameState, seat: number, square: number): number {
     }
   }
   return 1 - Math.pow(5 / 6, distances.size);
+}
+
+/** Expected loss for a player if their tokens get hit next turn, by anyone. */
+function exposure(state: GameState, p: PlayerState): number {
+  let e = 0;
+  for (const t of p.tokens) {
+    if (t.drifting) continue;
+    const squares = t.split ? t.split.map((m) => ({ pos: m, weight: 0.5 })) : [{ pos: t.pos, weight: 1 }];
+    for (const { pos, weight } of squares) {
+      const sq = absSquare(p.color, pos);
+      if (sq !== null) e += weight * threat(state, p.seat, sq) * (pos + REENTRY_COST);
+    }
+  }
+  return e;
 }
 
 function qValue(q: number): number {
@@ -134,5 +152,13 @@ export function evaluate(state: GameState, seat: number, w: Weights): number {
   const opponents = state.players.filter((p) => p.seat !== seat);
   const avgOpp = opponents.reduce((sum, p) => sum + standing(p), 0) / opponents.length;
   v -= w.opponent * avgOpp;
+
+  // Gang up on whoever is ahead: their standing hurts more, and their exposed tokens are good news
+  // even when someone else is the one who can hit them.
+  if (w.leader || w.leaderThreat) {
+    const leader = opponents.reduce((a, b) => (standing(b) > standing(a) ? b : a));
+    v -= w.leader * standing(leader);
+    if (w.leaderThreat) v += w.leaderThreat * exposure(state, leader);
+  }
   return v;
 }
