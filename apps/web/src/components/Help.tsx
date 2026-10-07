@@ -19,16 +19,17 @@ export function Help({ onClose }: { onClose: () => void }) {
         <section>
           <h3 className="mb-1 font-semibold text-text">The race</h3>
           <p>
-            Roll a 6 to bring a token out. Move clockwise and up your home column; you need the exact roll to get home. Land on a lone
-            opponent on a normal square to capture it. Stars and start squares are safe. A 6 gives another roll (a third 6 in a row is
-            lost). First to get all four tokens home wins.
+            Roll a 6 to bring a token out. Move clockwise and up your home column; you need the exact roll to get home.
+            Land on a lone opponent on a normal square to capture it. Stars and start squares are safe. A 6 gives
+            another roll (a third 6 in a row is lost). First to get all four tokens home wins.
           </p>
         </section>
         <section>
           <h3 className="mb-1 font-semibold text-text">Quantum charges (Q)</h3>
           <p>
-            You start with 1 Q and hold up to 4. Land exactly on a glowing Node (the safe squares) to gain 1 Q; a Node then rests until the
-            next round. You also get 1 Q when one of your tokens is captured. Every quantum action costs 1 Q.
+            You start with 1 Q and hold up to 4. Land exactly on a glowing Node (the safe squares) to gain 1 Q; a Node
+            then rests until the next round. You also get 1 Q when one of your tokens is captured. Every quantum action
+            costs 1 Q.
           </p>
         </section>
         <section className="grid gap-2 sm:grid-cols-2">
@@ -44,15 +45,15 @@ export function Help({ onClose }: { onClose: () => void }) {
         <section>
           <h3 className="mb-1 font-semibold text-text">Split in detail</h3>
           <p>
-            A split token sits on two markers, A and B. At the start of your next turn you pick where it lands, or hold it open once more.
-            If an opponent lands on a marker, a coin decides whether your token was really there.
+            A split token sits on two markers, A and B. At the start of your next turn you pick where it lands, or hold
+            it open once more. If an opponent lands on a marker, a coin decides whether your token was really there.
           </p>
         </section>
         <section>
           <h3 className="mb-1 font-semibold text-text">Scoring</h3>
           <p>
-            Token home +10, capture +3 (+4 on a split token), being captured −1, +1 per 5 squares of progress at the end, placement bonus
-            +15 / +8 / +4, and up to 2 points for unspent Q.
+            Token home +10, capture +3 (+4 on a split token), being captured −1, +1 per 5 squares of progress at the
+            end, placement bonus +15 / +8 / +4, and up to 2 points for unspent Q.
           </p>
         </section>
         <section className="hidden md:block">

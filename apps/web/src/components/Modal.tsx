@@ -1,6 +1,16 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
-export function Modal({ title, onClose, children, wide }: { title: string; onClose?: () => void; children: ReactNode; wide?: boolean }) {
+export function Modal({
+  title,
+  onClose,
+  children,
+  wide,
+}: {
+  title: string;
+  onClose?: () => void;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     panel.current?.focus();
@@ -11,7 +21,10 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
       <div
         ref={panel}
         tabIndex={-1}
@@ -26,7 +39,12 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">{title}</h2>
           {onClose && (
-            <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-muted hover:bg-panel-2 hover:text-text" aria-label="Close">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-2 py-1 text-muted hover:bg-panel-2 hover:text-text"
+              aria-label="Close"
+            >
               ✕
             </button>
           )}

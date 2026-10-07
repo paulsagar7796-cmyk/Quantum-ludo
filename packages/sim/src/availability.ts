@@ -22,5 +22,7 @@ for (let g = 0; g < 300; g++) {
 }
 console.log(`mode=${mode} act phases: ${actTurns}`);
 for (const k of Object.keys(offered)) {
-  console.log(`${k.padEnd(10)} offered ${offered[k]} times (${((100 * offered[k]!) / actTurns).toFixed(2)}% of rolls), taken ${taken[k]} times (${((100 * taken[k]!) / Math.max(offered[k]!, 1)).toFixed(1)}% of offers)`);
+  console.log(
+    `${k.padEnd(10)} offered ${offered[k]} times (${((100 * offered[k]!) / actTurns).toFixed(2)}% of rolls), taken ${taken[k]} times (${((100 * taken[k]!) / Math.max(offered[k]!, 1)).toFixed(1)}% of offers)`,
+  );
 }

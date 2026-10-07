@@ -49,18 +49,21 @@ export interface GameController {
  * M2 will put the same engine behind a Transport so a host or server can be the authority instead.
  */
 export function useGame(match: MatchConfig, resume?: SavedGame | null): GameController {
-  const rng = useRef<SeededRng>(null!);
-  if (!rng.current) {
-    rng.current = new SeededRng(0);
-    rng.current.setState(resume ? resume.rng : randomSeed());
-  }
+  // Created once; the generator object itself is stable and mutated by the engine.
+  const [rng] = useState(() => {
+    const r = new SeededRng(0);
+    r.setState(resume ? resume.rng : randomSeed());
+    return r;
+  });
 
   const [state, setState] = useState(
     () => resume?.state ?? createGame({ playerCount: match.playerCount, observationMode: match.observationMode }),
   );
   const [log, setLog] = useState<LogLine[]>(() => resume?.log ?? []);
   const [lastEvents, setLastEvents] = useState<GameEvent[]>([]);
-  const [lastRoll, setLastRoll] = useState<{ seat: number; value: number; n: number } | null>(() => resume?.lastRoll ?? null);
+  const [lastRoll, setLastRoll] = useState<{ seat: number; value: number; n: number } | null>(
+    () => resume?.lastRoll ?? null,
+  );
   const [rolling, setRolling] = useState(false);
   const stateRef = useRef(state);
   const nextId = useRef(resume ? Math.max(0, ...resume.log.map((l) => l.id + 1)) : 0);
@@ -79,7 +82,7 @@ export function useGame(match: MatchConfig, resume?: SavedGame | null): GameCont
 
   const dispatch = useCallback(
     (action: Action) => {
-      const res = applyAction(stateRef.current, action, rng.current);
+      const res = applyAction(stateRef.current, action, rng);
       stateRef.current = res.state;
       setState(res.state);
       setLastEvents(res.events);
@@ -92,7 +95,8 @@ export function useGame(match: MatchConfig, resume?: SavedGame | null): GameCont
 
       const roll = res.events.find((e) => e.type === "rolled");
       const animate = roll && match.botSpeed !== "instant" && !reducedMotion();
-      if (roll && roll.type === "rolled") setLastRoll((prev) => ({ seat: roll.seat, value: roll.value, n: (prev?.n ?? 0) + 1 }));
+      if (roll && roll.type === "rolled")
+        setLastRoll((prev) => ({ seat: roll.seat, value: roll.value, n: (prev?.n ?? 0) + 1 }));
       if (animate) {
         // Keep the result (and its log line) hidden until the die lands.
         setRolling(true);
@@ -106,14 +110,14 @@ export function useGame(match: MatchConfig, resume?: SavedGame | null): GameCont
       }
       sfx.playCues(cuesFor(res.events, humanSeats));
     },
-    [name, humanSeats, match.botSpeed],
+    [name, humanSeats, match.botSpeed, rng],
   );
 
   // Save after every change so the game survives a refresh; a finished game is not resumable.
   useEffect(() => {
     if (state.phase === "over") clearSave();
-    else writeSave({ match, state, rng: rng.current.getState(), log, lastRoll });
-  }, [match, state, log, lastRoll]);
+    else writeSave({ match, state, rng: rng.getState(), log, lastRoll });
+  }, [match, state, log, lastRoll, rng]);
 
   const bot = state.phase === "over" ? null : bots[state.current];
   useEffect(() => {
@@ -124,5 +128,15 @@ export function useGame(match: MatchConfig, resume?: SavedGame | null): GameCont
   }, [bot, state, rolling, dispatch, match.botSpeed]);
 
   const legal = useMemo(() => legalActions(state), [state]);
-  return { state, legal, log, lastEvents, lastRoll, isHumanTurn: state.phase !== "over" && !bot, rolling, dispatch, name };
+  return {
+    state,
+    legal,
+    log,
+    lastEvents,
+    lastRoll,
+    isHumanTurn: state.phase !== "over" && !bot,
+    rolling,
+    dispatch,
+    name,
+  };
 }

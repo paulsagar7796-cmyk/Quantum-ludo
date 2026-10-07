@@ -1,12 +1,4 @@
-import {
-  HOME_POS,
-  LAST_TRACK_POS,
-  NODE_SQUARES,
-  SAFE_SQUARES,
-  START_SQUARE,
-  TRACK_LENGTH,
-  YARD,
-} from "./constants";
+import { HOME_POS, LAST_TRACK_POS, NODE_SQUARES, SAFE_SQUARES, START_SQUARE, TRACK_LENGTH, YARD } from "./constants";
 import type { Color, GameState, MarkerIndex, PlayerState, TokenRef } from "./types";
 
 /** Absolute loop square for a relative position, or null when not on the shared track. */
@@ -90,8 +82,7 @@ export function isOpposingBlockade(state: GameState, square: number, seat: numbe
 export function hasOpposingPresence(state: GameState, square: number, seat: number): boolean {
   if (isSafe(square)) return false;
   return (
-    realTokensAt(state, square).some((r) => r.seat !== seat) ||
-    markersAt(state, square).some((m) => m.seat !== seat)
+    realTokensAt(state, square).some((r) => r.seat !== seat) || markersAt(state, square).some((m) => m.seat !== seat)
   );
 }
 

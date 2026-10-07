@@ -30,14 +30,34 @@ function print(r: SimReport): void {
     `\n=== ${o.playerCount} players | ${o.mode === "coin" ? "Chaos (coin)" : "Tactical (choice)"} | end: ${o.endCondition} | ${r.games} games | ${(r.ms / 1000).toFixed(1)}s ===`,
   );
   console.log(
-    `Rounds: mean ${avg(r.rounds.reduce((a, b) => a + b, 0), r.rounds.length, 1)}, median ${median} | ` +
+    `Rounds: mean ${avg(
+      r.rounds.reduce((a, b) => a + b, 0),
+      r.rounds.length,
+      1,
+    )}, median ${median} | ` +
       `ended by finish ${pct(r.finishEnds, r.games)}, by round cap ${pct(r.roundCapEnds, r.games)} | ` +
       `marker hits ${avg(r.hits, r.games)}/game (${pct(r.hitSuccesses, r.hits)} captured) | forfeits ${avg(r.forfeits, r.games)}/game`,
   );
   console.log(`Seat wins: ${r.seatWins.map((w, i) => `seat ${i} ${pct(w, r.games)}`).join(", ")}`);
 
   const rows: (string | number)[][] = [
-    ["bot", "games", "win%", "avgPlace", "avgScore", "home/g", "capt/g", "lost/g", "Q node/g", "Q capt/g", "split/g", "link/g", "ghost/g", "force/g", "endQ"],
+    [
+      "bot",
+      "games",
+      "win%",
+      "avgPlace",
+      "avgScore",
+      "home/g",
+      "capt/g",
+      "lost/g",
+      "Q node/g",
+      "Q capt/g",
+      "split/g",
+      "link/g",
+      "ghost/g",
+      "force/g",
+      "endQ",
+    ],
   ];
   for (const [id, s] of Object.entries(r.bots)) {
     rows.push([

@@ -32,7 +32,17 @@ function headline(events: GameEvent[], name: (seat: number) => string): { text: 
 
 function SpeakerIcon({ on }: { on: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      width={18}
+      height={18}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" />
       {on ? <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /> : <path d="m16 9 6 6M22 9l-6 6" />}
     </svg>
@@ -55,7 +65,8 @@ export function GameScreen({
   // Hot-seat with several humans: hand the device over at the start of each human turn.
   const humanCount = match.seats.slice(0, match.playerCount).filter((s) => s.kind === "human").length;
   const [readyTurn, setReadyTurn] = useState<number | null>(null);
-  const handoff = humanCount >= 2 && isHumanTurn && state.phase === "upkeep" && !state.bonus && readyTurn !== state.turn;
+  const handoff =
+    humanCount >= 2 && isHumanTurn && state.phase === "upkeep" && !state.bonus && readyTurn !== state.turn;
   // While the die tumbles (or the device is being passed), nothing can be chosen yet.
   const canAct = isHumanTurn && !g.rolling && !handoff;
   const [soundOn, setSoundOn] = useState(sfx.enabled);
@@ -70,17 +81,22 @@ export function GameScreen({
   const [showResults, setShowResults] = useState(true);
   const [confirmQuit, setConfirmQuit] = useState(false);
 
-  // Any change to the game clears half-finished choices.
-  useEffect(() => {
+  // Any change to the game clears half-finished choices (React's "reset state when an input changes" pattern).
+  const [choicesFor, setChoicesFor] = useState(state);
+  if (choicesFor !== state) {
+    setChoicesFor(state);
     setSelected(null);
     setMode("idle");
     setArmed(null);
     setLinkFirst(null);
-  }, [state]);
+  }
 
   const act = useCallback((a: Action) => dispatch(a), [dispatch]);
 
-  const choices = useMemo(() => (canAct ? tokenChoices(state, legal) : new Map<number, TokenChoice>()), [canAct, state, legal]);
+  const choices = useMemo(
+    () => (canAct ? tokenChoices(state, legal) : new Map<number, TokenChoice>()),
+    [canAct, state, legal],
+  );
   const movable = [...choices.keys()];
   // Auto-pick when there is only one real choice, e.g. every movable token is still in the yard.
   const samePlace = new Set(movable.map((t) => (me.tokens[t]!.split ? `s${t}` : me.tokens[t]!.pos))).size === 1;
@@ -97,29 +113,53 @@ export function GameScreen({
     const color = me.color;
     if (armed === "split" && choice.split) {
       choice.split.forEach((m, i) =>
-        previews.push({ point: pointFor(color, m, choice.token), kind: "split", label: i === 0 ? "A" : "B", onClick: () => act({ type: "superpose", token: choice.token }) }),
+        previews.push({
+          point: pointFor(color, m, choice.token),
+          kind: "split",
+          label: i === 0 ? "A" : "B",
+          onClick: () => act({ type: "superpose", token: choice.token }),
+        }),
       );
     } else if (armed === "ghost" && choice.ghost !== null) {
-      previews.push({ point: pointFor(color, choice.ghost, choice.token), kind: "ghost", label: "G", onClick: () => act({ type: "ghost", token: choice.token }) });
+      previews.push({
+        point: pointFor(color, choice.ghost, choice.token),
+        kind: "ghost",
+        label: "G",
+        onClick: () => act({ type: "ghost", token: choice.token }),
+      });
     } else if (choice.move !== null) {
-      previews.push({ point: pointFor(color, choice.move, choice.token), kind: "move", onClick: () => act({ type: "move", token: choice.token }) });
+      previews.push({
+        point: pointFor(color, choice.move, choice.token),
+        kind: "move",
+        onClick: () => act({ type: "move", token: choice.token }),
+      });
     }
   }
 
   const markerTargets: MarkerTarget[] = [];
   if (collapsing) {
     const token = me.tokens.findIndex((t) => t.split);
-    for (const marker of [0, 1] as MarkerIndex[]) markerTargets.push({ seat: me.seat, token, marker, onClick: () => act({ type: "collapse", marker }) });
+    for (const marker of [0, 1] as MarkerIndex[])
+      markerTargets.push({ seat: me.seat, token, marker, onClick: () => act({ type: "collapse", marker }) });
   } else if (canAct && mode === "force") {
     for (const f of forces) {
       const markers: MarkerIndex[] = f.marker === undefined ? [0, 1] : [f.marker];
-      for (const marker of markers) markerTargets.push({ ...f.target, marker, onClick: () => act({ type: "observe", target: f.target, ...(f.marker !== undefined ? { marker: f.marker } : {}) }) });
+      for (const marker of markers)
+        markerTargets.push({
+          ...f.target,
+          marker,
+          onClick: () =>
+            act({ type: "observe", target: f.target, ...(f.marker !== undefined ? { marker: f.marker } : {}) }),
+        });
     }
   }
 
   let selectableTokens: Set<number> | null = null;
   if (canAct && state.phase === "act") {
-    if (mode === "link") selectableTokens = new Set([...linkable].filter((t) => linkFirst === null || t === linkFirst || canLink(legal, linkFirst, t)));
+    if (mode === "link")
+      selectableTokens = new Set(
+        [...linkable].filter((t) => linkFirst === null || t === linkFirst || canLink(legal, linkFirst, t)),
+      );
     else if (mode === "idle") selectableTokens = new Set(movable);
   }
 
@@ -138,7 +178,7 @@ export function GameScreen({
     setArmed(null);
     setLinkFirst(null);
   };
-  let prompt: ReactNode = null;
+  let prompt: ReactNode;
   const buttons: ActionButton[] = [];
   const roll = state.roll;
 
@@ -166,49 +206,161 @@ export function GameScreen({
       </span>
     );
   } else if (collapsing) {
-    prompt = <span>Your Split must land. Tap marker <b>A</b> or <b>B</b>{has(legal, "hold") ? ", or hold it open one more round" : ""}.</span>;
-    buttons.push({ id: "a", label: "Land on A", tone: "split", shortcut: "A", onClick: () => act({ type: "collapse", marker: 0 }) });
-    buttons.push({ id: "b", label: "Land on B", tone: "split", shortcut: "B", onClick: () => act({ type: "collapse", marker: 1 }) });
-    if (has(legal, "hold")) buttons.push({ id: "hold", label: "Hold", sub: "1 more round", tone: "secondary", shortcut: "H", onClick: () => act({ type: "hold" }) });
+    prompt = (
+      <span>
+        Your Split must land. Tap marker <b>A</b> or <b>B</b>
+        {has(legal, "hold") ? ", or hold it open one more round" : ""}.
+      </span>
+    );
+    buttons.push({
+      id: "a",
+      label: "Land on A",
+      tone: "split",
+      shortcut: "A",
+      onClick: () => act({ type: "collapse", marker: 0 }),
+    });
+    buttons.push({
+      id: "b",
+      label: "Land on B",
+      tone: "split",
+      shortcut: "B",
+      onClick: () => act({ type: "collapse", marker: 1 }),
+    });
+    if (has(legal, "hold"))
+      buttons.push({
+        id: "hold",
+        label: "Hold",
+        sub: "1 more round",
+        tone: "secondary",
+        shortcut: "H",
+        onClick: () => act({ type: "hold" }),
+      });
   } else if (state.phase === "upkeep") {
-    prompt = state.bonus ? <span className="font-semibold">You rolled a 6: roll again!</span> : <span>Your turn. Roll the die.</span>;
-    buttons.push({ id: "roll", label: "Roll", tone: "primary", shortcut: "Space", onClick: () => act({ type: "roll" }) });
-    if (has(legal, "decouple")) buttons.push({ id: "decouple", label: "Break Link", sub: "free", tone: "secondary", onClick: () => act({ type: "decouple" }) });
+    prompt = state.bonus ? (
+      <span className="font-semibold">You rolled a 6: roll again!</span>
+    ) : (
+      <span>Your turn. Roll the die.</span>
+    );
+    buttons.push({
+      id: "roll",
+      label: "Roll",
+      tone: "primary",
+      shortcut: "Space",
+      onClick: () => act({ type: "roll" }),
+    });
+    if (has(legal, "decouple"))
+      buttons.push({
+        id: "decouple",
+        label: "Break Link",
+        sub: "free",
+        tone: "secondary",
+        onClick: () => act({ type: "decouple" }),
+      });
   } else if (mode === "link") {
-    prompt = <span><b className="text-link">Link</b> (1 Q): tap {linkFirst === null ? "two of your tokens" : "a second token"} to link them.</span>;
+    prompt = (
+      <span>
+        <b className="text-link">Link</b> (1 Q): tap {linkFirst === null ? "two of your tokens" : "a second token"} to
+        link them.
+      </span>
+    );
     buttons.push({ id: "cancel", label: "Cancel", tone: "secondary", shortcut: "Esc", onClick: cancel });
   } else if (mode === "force") {
     prompt = tactical ? (
-      <span><b className="text-force">Force</b> (1 Q): tap the marker where the opponent's token must land.</span>
+      <span>
+        <b className="text-force">Force</b> (1 Q): tap the marker where the opponent's token must land.
+      </span>
     ) : (
-      <span><b className="text-force">Force</b> (1 Q): tap an opponent's split token. A coin decides where it lands.</span>
+      <span>
+        <b className="text-force">Force</b> (1 Q): tap an opponent's split token. A coin decides where it lands.
+      </span>
     );
     buttons.push({ id: "cancel", label: "Cancel", tone: "secondary", shortcut: "Esc", onClick: cancel });
   } else if (armed && choice) {
     const m = armed === "split" ? MECHANIC.superpose : MECHANIC.ghost;
-    prompt = <span><b style={{ color: m.color }}>{m.name}</b> (1 Q): {m.hint}</span>;
+    prompt = (
+      <span>
+        <b style={{ color: m.color }}>{m.name}</b> (1 Q): {m.hint}
+      </span>
+    );
     buttons.push({
       id: "confirm",
       label: `Confirm ${m.name}`,
       tone: armed,
       shortcut: "Enter",
-      onClick: () => act(armed === "split" ? { type: "superpose", token: choice.token } : { type: "ghost", token: choice.token }),
+      onClick: () =>
+        act(armed === "split" ? { type: "superpose", token: choice.token } : { type: "ghost", token: choice.token }),
     });
     buttons.push({ id: "cancel", label: "Cancel", tone: "secondary", shortcut: "Esc", onClick: cancel });
   } else {
-    const what = movable.length === 0 ? "No normal move." : sel === null ? "Tap a token to move it." : "Tap the highlighted square to move.";
+    const what =
+      movable.length === 0
+        ? "No normal move."
+        : sel === null
+          ? "Tap a token to move it."
+          : "Tap the highlighted square to move.";
     prompt = (
       <span>
         You rolled <b>{roll}</b>. {what}
         {me.q > 0 && <span className="text-muted"> You have {me.q} Q.</span>}
       </span>
     );
-    if (choice?.move !== null && choice) buttons.push({ id: "move", label: "Move", tone: "primary", shortcut: "Enter", onClick: () => act({ type: "move", token: choice.token }) });
-    if (choice?.split) buttons.push({ id: "split", label: "Split", sub: "1 Q", tone: "split", shortcut: "S", title: MECHANIC.superpose.hint, onClick: () => setArmed("split") });
-    if (choice && choice.ghost !== null) buttons.push({ id: "ghost", label: "Ghost", sub: "1 Q", tone: "ghost", shortcut: "G", title: MECHANIC.ghost.hint, onClick: () => setArmed("ghost") });
-    if (linkable.size > 0) buttons.push({ id: "link", label: "Link", sub: "free · 1 Q", tone: "link", shortcut: "L", title: MECHANIC.entangle.hint, onClick: () => setMode("link") });
-    if (forces.length > 0) buttons.push({ id: "force", label: "Force", sub: "free · 1 Q", tone: "force", shortcut: "F", title: MECHANIC.observe.hint, onClick: () => setMode("force") });
-    if (has(legal, "pass")) buttons.push({ id: "pass", label: "Pass", sub: "no move", tone: movable.length ? "secondary" : "primary", shortcut: "P", onClick: () => act({ type: "pass" }) });
+    if (choice?.move !== null && choice)
+      buttons.push({
+        id: "move",
+        label: "Move",
+        tone: "primary",
+        shortcut: "Enter",
+        onClick: () => act({ type: "move", token: choice.token }),
+      });
+    if (choice?.split)
+      buttons.push({
+        id: "split",
+        label: "Split",
+        sub: "1 Q",
+        tone: "split",
+        shortcut: "S",
+        title: MECHANIC.superpose.hint,
+        onClick: () => setArmed("split"),
+      });
+    if (choice && choice.ghost !== null)
+      buttons.push({
+        id: "ghost",
+        label: "Ghost",
+        sub: "1 Q",
+        tone: "ghost",
+        shortcut: "G",
+        title: MECHANIC.ghost.hint,
+        onClick: () => setArmed("ghost"),
+      });
+    if (linkable.size > 0)
+      buttons.push({
+        id: "link",
+        label: "Link",
+        sub: "free · 1 Q",
+        tone: "link",
+        shortcut: "L",
+        title: MECHANIC.entangle.hint,
+        onClick: () => setMode("link"),
+      });
+    if (forces.length > 0)
+      buttons.push({
+        id: "force",
+        label: "Force",
+        sub: "free · 1 Q",
+        tone: "force",
+        shortcut: "F",
+        title: MECHANIC.observe.hint,
+        onClick: () => setMode("force"),
+      });
+    if (has(legal, "pass"))
+      buttons.push({
+        id: "pass",
+        label: "Pass",
+        sub: "no move",
+        tone: movable.length ? "secondary" : "primary",
+        shortcut: "P",
+        onClick: () => act({ type: "pass" }),
+      });
   }
 
   // ---- Keyboard ----------------------------------------------------------------
@@ -231,7 +383,16 @@ export function GameScreen({
         setArmed(null);
         return;
       }
-      const map: Record<string, string> = { s: "split", g: "ghost", l: "link", f: "force", p: "pass", a: "a", b: "b", h: "hold" };
+      const map: Record<string, string> = {
+        s: "split",
+        g: "ghost",
+        l: "link",
+        f: "force",
+        p: "pass",
+        a: "a",
+        b: "b",
+        h: "hold",
+      };
       if (map[key]) press(map[key]!);
     };
     window.addEventListener("keydown", onKey);
@@ -257,10 +418,18 @@ export function GameScreen({
       >
         <SpeakerIcon on={soundOn} />
       </button>
-      <button type="button" onClick={() => setShowHelp(true)} className="rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-panel-2 hover:text-text">
+      <button
+        type="button"
+        onClick={() => setShowHelp(true)}
+        className="rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-panel-2 hover:text-text"
+      >
         Rules
       </button>
-      <button type="button" onClick={() => setConfirmQuit(true)} className="rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-panel-2 hover:text-text">
+      <button
+        type="button"
+        onClick={() => setConfirmQuit(true)}
+        className="rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-panel-2 hover:text-text"
+      >
         Quit
       </button>
     </div>
@@ -286,7 +455,10 @@ export function GameScreen({
         <header className="flex flex-col gap-2 lg:hidden">
           <div className="flex items-center justify-between">
             <h1 className="text-base font-black tracking-tight">
-              Quantum Ludo <span className="text-xs font-normal text-muted">· Round {state.round} · {modeLabel}</span>
+              Quantum Ludo{" "}
+              <span className="text-xs font-normal text-muted">
+                · Round {state.round} · {modeLabel}
+              </span>
             </h1>
             {toolbar}
           </div>
@@ -313,12 +485,23 @@ export function GameScreen({
           )}
         </div>
 
-        <button type="button" onClick={() => setShowLog(true)} className="truncate text-left text-xs text-muted lg:hidden">
+        <button
+          type="button"
+          onClick={() => setShowLog(true)}
+          className="truncate text-left text-xs text-muted lg:hidden"
+        >
           {g.log[0]?.text ?? "Moves will appear here."} <span className="text-split">· log</span>
         </button>
 
         <ActionBar
-          die={<Die value={g.lastRoll?.value ?? null} color={rollerColor} rollKey={g.lastRoll?.n ?? 0} rolling={g.rolling} />}
+          die={
+            <Die
+              value={g.lastRoll?.value ?? null}
+              color={rollerColor}
+              rollKey={g.lastRoll?.n ?? 0}
+              rolling={g.rolling}
+            />
+          }
           prompt={prompt}
           buttons={buttons}
         />
@@ -361,10 +544,18 @@ export function GameScreen({
         <Modal title="Back to the lobby?" onClose={() => setConfirmQuit(false)}>
           <p className="mb-4 text-sm text-muted">Your game is saved. You can resume it from the lobby.</p>
           <div className="flex gap-2">
-            <button type="button" onClick={onNewGame} className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200">
+            <button
+              type="button"
+              onClick={onNewGame}
+              className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200"
+            >
               Go to lobby
             </button>
-            <button type="button" onClick={() => setConfirmQuit(false)} className="min-h-11 flex-1 rounded-xl border border-line bg-panel-2 font-semibold hover:bg-line">
+            <button
+              type="button"
+              onClick={() => setConfirmQuit(false)}
+              className="min-h-11 flex-1 rounded-xl border border-line bg-panel-2 font-semibold hover:bg-line"
+            >
               Keep playing
             </button>
           </div>

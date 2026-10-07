@@ -79,7 +79,12 @@ function seatBots(pool: BotId[], playerCount: number, g: number, rng: SeededRng)
   return Array.from({ length: playerCount }, (_, i) => chosen[(i + g) % chosen.length]!);
 }
 
-export function playGame(state: GameState, bots: Bot[], rng: SeededRng, onEvents?: (events: GameEvent[]) => void): GameState {
+export function playGame(
+  state: GameState,
+  bots: Bot[],
+  rng: SeededRng,
+  onEvents?: (events: GameEvent[]) => void,
+): GameState {
   let s = state;
   let steps = 0;
   while (s.phase !== "over") {

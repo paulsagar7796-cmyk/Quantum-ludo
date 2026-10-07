@@ -41,7 +41,13 @@ test("a human can roll and play a turn", async ({ page }) => {
       if (await b.isVisible().catch(() => false)) await b.click();
     }
     const movable = page.getByRole("button", { name: /^Token \d/ });
-    if (await movable.first().isVisible().catch(() => false)) await movable.first().click();
+    if (
+      await movable
+        .first()
+        .isVisible()
+        .catch(() => false)
+    )
+      await movable.first().click();
     if ((await page.getByText(/^You rolled a \d$/).count()) >= 3) break;
   }
   expect(await page.getByText(/^You rolled a \d$/).count()).toBeGreaterThanOrEqual(3);
@@ -77,7 +83,13 @@ for (const mechanic of ["Split", "Ghost"] as const) {
         if (await b.isVisible().catch(() => false)) await b.click();
       }
       const token = page.getByRole("button", { name: /^Token \d/ });
-      if (await token.first().isVisible().catch(() => false)) await token.first().click();
+      if (
+        await token
+          .first()
+          .isVisible()
+          .catch(() => false)
+      )
+        await token.first().click();
       if (await quantum.isVisible().catch(() => false)) break;
       const move = page.getByRole("button", { name: /^Move(?!s)/ });
       if (await move.isVisible().catch(() => false)) await move.click();
@@ -125,7 +137,10 @@ test("a game survives a reload and can be resumed", async ({ page }) => {
   await page.getByRole("button", { name: "Start game" }).click();
   await page.getByRole("button", { name: /^Roll/ }).click();
   await expect(page.getByRole("img", { name: /^Die shows [1-6]$/ })).toBeVisible({ timeout: 2000 });
-  const rolled = await page.getByText(/^You rolled a [1-6]$/).first().textContent();
+  const rolled = await page
+    .getByText(/^You rolled a [1-6]$/)
+    .first()
+    .textContent();
 
   await page.reload();
   const card = page.getByRole("region", { name: "Game in progress" });
@@ -151,7 +166,13 @@ test("hot-seat play hands the device over between humans", async ({ page }) => {
       if (await b.isVisible().catch(() => false)) await b.click();
     }
     const token = page.getByRole("button", { name: /^Token \d/ });
-    if (await token.first().isVisible().catch(() => false)) await token.first().click();
+    if (
+      await token
+        .first()
+        .isVisible()
+        .catch(() => false)
+    )
+      await token.first().click();
     await page.waitForTimeout(150);
   }
   await expect(handoff.getByText("Player 2’s turn")).toBeVisible();

@@ -48,7 +48,11 @@ export function ActionBar({ die, prompt, buttons }: { die: ReactNode; prompt: Re
             >
               <span>
                 {b.label}
-                {b.shortcut && <kbd className="ml-1.5 hidden rounded border border-current/30 px-1 text-[10px] font-normal opacity-70 md:inline">{b.shortcut}</kbd>}
+                {b.shortcut && (
+                  <kbd className="ml-1.5 hidden rounded border border-current/30 px-1 text-[10px] font-normal opacity-70 md:inline">
+                    {b.shortcut}
+                  </kbd>
+                )}
               </span>
               {b.sub && <span className="text-[11px] font-normal opacity-80">{b.sub}</span>}
             </button>

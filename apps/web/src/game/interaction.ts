@@ -50,7 +50,9 @@ export interface ForceOption {
 }
 
 export function forceOptions(legal: Action[]): ForceOption[] {
-  return legal.flatMap((a) => (a.type === "observe" ? [{ target: a.target, ...(a.marker !== undefined ? { marker: a.marker } : {}) }] : []));
+  return legal.flatMap((a) =>
+    a.type === "observe" ? [{ target: a.target, ...(a.marker !== undefined ? { marker: a.marker } : {}) }] : [],
+  );
 }
 
 export function has(legal: Action[], type: Action["type"]): boolean {

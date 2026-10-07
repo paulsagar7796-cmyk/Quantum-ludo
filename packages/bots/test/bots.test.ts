@@ -22,7 +22,12 @@ describe("bots", () => {
   }, 60_000);
 
   it("is deterministic", () => {
-    const run = () => play(PERSONALITY_IDS.map((id) => createBot(id)), 11, "coin");
+    const run = () =>
+      play(
+        PERSONALITY_IDS.map((id) => createBot(id)),
+        11,
+        "coin",
+      );
     expect(run()).toEqual(run());
   }, 60_000);
 

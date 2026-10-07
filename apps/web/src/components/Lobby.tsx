@@ -52,6 +52,7 @@ function ago(ms: number): string {
 }
 
 function ResumeCard({ saved, onResume, onDiscard }: { saved: SavedGame; onResume: () => void; onDiscard: () => void }) {
+  const [now] = useState(() => Date.now());
   const players = saved.state.players.map((p) => seatName(saved.match, p.seat));
   return (
     <section className="rounded-2xl border border-split/50 bg-split/10 p-3" aria-label="Game in progress">
@@ -59,12 +60,20 @@ function ResumeCard({ saved, onResume, onDiscard }: { saved: SavedGame; onResume
       <p className="mt-1 text-sm">
         Round {saved.state.round} · {players.join(", ")}
       </p>
-      <p className="text-xs text-muted">Saved {ago(Date.now() - saved.savedAt)}</p>
+      <p className="text-xs text-muted">Saved {ago(now - saved.savedAt)}</p>
       <div className="mt-3 flex gap-2">
-        <button type="button" onClick={onResume} className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200">
+        <button
+          type="button"
+          onClick={onResume}
+          className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200"
+        >
           Resume game
         </button>
-        <button type="button" onClick={onDiscard} className="min-h-11 rounded-xl border border-line bg-panel-2 px-4 text-sm font-semibold hover:bg-line">
+        <button
+          type="button"
+          onClick={onDiscard}
+          className="min-h-11 rounded-xl border border-line bg-panel-2 px-4 text-sm font-semibold hover:bg-line"
+        >
           Discard
         </button>
       </div>
@@ -116,7 +125,11 @@ export function Lobby({
             const seat = m.seats[i]!;
             return (
               <li key={color} className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-panel p-2">
-                <span className="h-6 w-6 shrink-0 rounded-full border-2" style={{ background: COLOR_HEX[color].base, borderColor: COLOR_HEX[color].deep }} aria-hidden />
+                <span
+                  className="h-6 w-6 shrink-0 rounded-full border-2"
+                  style={{ background: COLOR_HEX[color].base, borderColor: COLOR_HEX[color].deep }}
+                  aria-hidden
+                />
                 <input
                   value={seat.name}
                   onChange={(e) => setSeat(i, { name: e.target.value })}
@@ -206,10 +219,18 @@ export function Lobby({
       </section>
 
       <div className="mt-auto flex flex-col gap-2">
-        <button type="button" onClick={() => onStart(m)} className="min-h-12 rounded-xl bg-white text-base font-bold text-ink hover:bg-slate-200">
+        <button
+          type="button"
+          onClick={() => onStart(m)}
+          className="min-h-12 rounded-xl bg-white text-base font-bold text-ink hover:bg-slate-200"
+        >
           {saved ? "Start a new game" : "Start game"}
         </button>
-        <button type="button" onClick={() => setShowHelp(true)} className="min-h-11 rounded-xl border border-line bg-panel text-sm font-semibold hover:bg-panel-2">
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className="min-h-11 rounded-xl border border-line bg-panel text-sm font-semibold hover:bg-panel-2"
+        >
           How to play
         </button>
       </div>

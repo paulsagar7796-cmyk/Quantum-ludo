@@ -203,7 +203,15 @@ class Sfx {
     switch (name) {
       case "dice":
         // Rattle of the die hitting the board, then a final clack.
-        for (let i = 0; i < 7; i++) n({ dur: 0.03, at: i * 0.055 + Math.random() * 0.015, filter: "bandpass", freq: 1800 + Math.random() * 1600, q: 3, gain: 0.55 });
+        for (let i = 0; i < 7; i++)
+          n({
+            dur: 0.03,
+            at: i * 0.055 + Math.random() * 0.015,
+            filter: "bandpass",
+            freq: 1800 + Math.random() * 1600,
+            q: 3,
+            gain: 0.55,
+          });
         n({ dur: 0.05, at: 0.42, filter: "bandpass", freq: 1100, q: 2, gain: 0.7 });
         s({ freq: 190, type: "triangle", dur: 0.07, at: 0.42, gain: 0.35 });
         break;
@@ -267,7 +275,9 @@ class Sfx {
         [523, 659, 784, 1047].forEach((f, i) => s({ freq: f, type: "sine", dur: 0.26, gain: 0.16, at: i * 0.08 }));
         break;
       case "fanfare":
-        [523, 659, 784, 1047, 1319].forEach((f, i) => s({ freq: f, type: "triangle", dur: 0.4, gain: 0.16, at: i * 0.11 }));
+        [523, 659, 784, 1047, 1319].forEach((f, i) =>
+          s({ freq: f, type: "triangle", dur: 0.4, gain: 0.16, at: i * 0.11 }),
+        );
         break;
       case "pass":
         s({ freq: 180, type: "sine", dur: 0.14, gain: 0.18 });

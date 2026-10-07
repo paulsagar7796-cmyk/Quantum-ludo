@@ -60,7 +60,9 @@ export function PlayerPanel({
             <div className="flex items-center gap-1.5">
               <ColorChip player={p} size={compact ? 14 : 18} />
               <span className="truncate text-sm font-semibold">{name(p.seat)}</span>
-              {isBot(p.seat) && <span className="rounded bg-line px-1 text-[10px] uppercase tracking-wide text-muted">bot</span>}
+              {isBot(p.seat) && (
+                <span className="rounded bg-line px-1 text-[10px] uppercase tracking-wide text-muted">bot</span>
+              )}
             </div>
             <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted">
               <QPips q={p.q} max={maxQ} />

@@ -20,9 +20,14 @@ export function Results({
   onClose: () => void;
 }) {
   return (
-    <Modal title={result.reason === "finish" ? `${name(result.ranking[0]!)} wins!` : "Mercy cap reached"} onClose={onClose} wide>
+    <Modal
+      title={result.reason === "finish" ? `${name(result.ranking[0]!)} wins!` : "Mercy cap reached"}
+      onClose={onClose}
+      wide
+    >
       <p className="mb-3 text-sm text-muted">
-        {result.rounds} rounds. Placement is the race: finisher first, then most tokens home, then shortest distance to home.
+        {result.rounds} rounds. Placement is the race: finisher first, then most tokens home, then shortest distance to
+        home.
       </p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm tabular-nums">
@@ -30,7 +35,9 @@ export function Results({
             <tr>
               <th className="py-1 pr-2 font-normal">Place</th>
               <th className="py-1 pr-2 font-normal">Player</th>
-              <th className="py-1 pr-2 text-right font-normal" title="Tokens home">Home</th>
+              <th className="py-1 pr-2 text-right font-normal" title="Tokens home">
+                Home
+              </th>
               <th className="py-1 pr-2 text-right font-normal">Captures</th>
               <th className="py-1 pr-2 text-right font-normal">Progress</th>
               <th className="py-1 pr-2 text-right font-normal">Placement</th>
@@ -63,10 +70,18 @@ export function Results({
         </table>
       </div>
       <div className="mt-4 flex gap-2">
-        <button type="button" onClick={onRematch} className="min-h-11 flex-1 rounded-xl bg-white px-4 font-semibold text-ink hover:bg-slate-200">
+        <button
+          type="button"
+          onClick={onRematch}
+          className="min-h-11 flex-1 rounded-xl bg-white px-4 font-semibold text-ink hover:bg-slate-200"
+        >
           Rematch
         </button>
-        <button type="button" onClick={onNewGame} className="min-h-11 flex-1 rounded-xl border border-line bg-panel-2 px-4 font-semibold hover:bg-line">
+        <button
+          type="button"
+          onClick={onNewGame}
+          className="min-h-11 flex-1 rounded-xl border border-line bg-panel-2 px-4 font-semibold hover:bg-line"
+        >
           New game
         </button>
       </div>

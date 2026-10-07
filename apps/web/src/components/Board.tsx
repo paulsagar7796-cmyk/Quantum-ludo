@@ -58,7 +58,13 @@ function Token({ color, dashed, faded }: { color: Color; dashed?: boolean; faded
   const c = COLOR_HEX[color];
   return (
     <g opacity={faded ? 0.55 : 1}>
-      <circle r={0.36} fill={dashed ? "transparent" : c.base} stroke={dashed ? c.base : c.deep} strokeWidth={dashed ? 0.07 : 0.05} strokeDasharray={dashed ? "0.12 0.08" : undefined} />
+      <circle
+        r={0.36}
+        fill={dashed ? "transparent" : c.base}
+        stroke={dashed ? c.base : c.deep}
+        strokeWidth={dashed ? 0.07 : 0.05}
+        strokeDasharray={dashed ? "0.12 0.08" : undefined}
+      />
       {dashed ? (
         <text y={0.13} textAnchor="middle" fontSize={0.38} fontWeight={700} fill={c.base}>
           ?
@@ -107,7 +113,18 @@ function Static({ state }: { state: GameState }) {
       </g>,
     );
     HOME_COLUMN[color].forEach(([x, y], i) =>
-      cells.push(<rect key={`hc-${color}-${i}`} x={x + 0.04} y={y + 0.04} width={0.92} height={0.92} rx={0.12} fill={c.base} opacity={active ? 0.8 : 0.2} />),
+      cells.push(
+        <rect
+          key={`hc-${color}-${i}`}
+          x={x + 0.04}
+          y={y + 0.04}
+          width={0.92}
+          height={0.92}
+          rx={0.12}
+          fill={c.base}
+          opacity={active ? 0.8 : 0.2}
+        />,
+      ),
     );
   });
 
@@ -128,7 +145,12 @@ function Static({ state }: { state: GameState }) {
   });
 
   const tri = (a: Point, b: Point, color: Color) => (
-    <polygon key={`tri-${color}`} points={`${a.x},${a.y} ${b.x},${b.y} 7.5,7.5`} fill={COLOR_HEX[color].base} opacity={used.has(color) ? 0.9 : 0.25} />
+    <polygon
+      key={`tri-${color}`}
+      points={`${a.x},${a.y} ${b.x},${b.y} 7.5,7.5`}
+      fill={COLOR_HEX[color].base}
+      opacity={used.has(color) ? 0.9 : 0.25}
+    />
   );
 
   return (
@@ -178,9 +200,23 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
   for (const p of state.players) {
     p.tokens.forEach((t, i) => {
       if (t.split) {
-        t.split.forEach((m, mi) => markers.push({ seat: p.seat, token: i, color: p.color, marker: mi as MarkerIndex, point: pointFor(p.color, m, i) }));
+        t.split.forEach((m, mi) =>
+          markers.push({
+            seat: p.seat,
+            token: i,
+            color: p.color,
+            marker: mi as MarkerIndex,
+            point: pointFor(p.color, m, i),
+          }),
+        );
       } else {
-        placed.push({ seat: p.seat, token: i, color: p.color, point: pointFor(p.color, t.pos, i), drifting: t.drifting });
+        placed.push({
+          seat: p.seat,
+          token: i,
+          color: p.color,
+          point: pointFor(p.color, t.pos, i),
+          drifting: t.drifting,
+        });
       }
     });
   }
@@ -206,14 +242,38 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
     if (!p.link) return [];
     const [a, b] = p.link.map((i) => position.get(`${p.seat}:${i}`));
     if (!a || !b) return [];
-    return [<line key={`link-${p.seat}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={LINK_COLOR} strokeWidth={0.08} strokeLinecap="round" opacity={0.8} />];
+    return [
+      <line
+        key={`link-${p.seat}`}
+        x1={a.x}
+        y1={a.y}
+        x2={b.x}
+        y2={b.y}
+        stroke={LINK_COLOR}
+        strokeWidth={0.08}
+        strokeLinecap="round"
+        opacity={0.8}
+      />,
+    ];
   });
 
   const splitLines = state.players.flatMap((p) =>
     p.tokens.flatMap((t, i) => {
       if (!t.split) return [];
       const [a, b] = ([0, 1] as const).map((mi) => position.get(`m${p.seat}:${i}:${mi}`)!);
-      return [<line key={`sl-${p.seat}-${i}`} x1={a!.x} y1={a!.y} x2={b!.x} y2={b!.y} stroke={SPLIT_COLOR} strokeWidth={0.06} strokeDasharray="0.15 0.12" opacity={0.7} />];
+      return [
+        <line
+          key={`sl-${p.seat}-${i}`}
+          x1={a!.x}
+          y1={a!.y}
+          x2={b!.x}
+          y2={b!.y}
+          stroke={SPLIT_COLOR}
+          strokeWidth={0.06}
+          strokeDasharray="0.15 0.12"
+          opacity={0.7}
+        />,
+      ];
     }),
   );
 
@@ -221,7 +281,12 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
     markerTargets.find((m) => m.seat === seat && m.token === token && m.marker === marker);
 
   return (
-    <svg viewBox={`-0.2 -0.2 ${GRID + 0.4} ${GRID + 0.4}`} className="h-full w-full select-none" role="img" aria-label="Quantum Ludo board">
+    <svg
+      viewBox={`-0.2 -0.2 ${GRID + 0.4} ${GRID + 0.4}`}
+      className="h-full w-full select-none"
+      role="img"
+      aria-label="Quantum Ludo board"
+    >
       <StaticBoard state={state} />
       {nodes}
       {/* Whose turn: a ring around their yard. */}
@@ -271,11 +336,28 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
             role={canTap ? "button" : undefined}
             aria-label={canTap ? `Token ${t.token + 1}` : undefined}
           >
-            {canTap && <circle r={0.5} fill="none" stroke="#f8fafc" strokeWidth={isSelected ? 0.1 : 0.06} className={isSelected ? undefined : "pulse"} />}
-            {t.drifting && <circle r={0.47} fill="none" stroke="#e2e8f0" strokeWidth={0.05} strokeDasharray="0.1 0.08" />}
+            {canTap && (
+              <circle
+                r={0.5}
+                fill="none"
+                stroke="#f8fafc"
+                strokeWidth={isSelected ? 0.1 : 0.06}
+                className={isSelected ? undefined : "pulse"}
+              />
+            )}
+            {t.drifting && (
+              <circle r={0.47} fill="none" stroke="#e2e8f0" strokeWidth={0.05} strokeDasharray="0.1 0.08" />
+            )}
             <Token color={t.color} faded={t.drifting} />
             {canTap && (
-              <text y={0.62} textAnchor="middle" fontSize={0.24} fontWeight={700} fill="#f8fafc" className="token-number">
+              <text
+                y={0.62}
+                textAnchor="middle"
+                fontSize={0.24}
+                fontWeight={700}
+                fill="#f8fafc"
+                className="token-number"
+              >
                 {t.token + 1}
               </text>
             )}
@@ -287,9 +369,21 @@ export function Board({ state, selectable, selected, previews, markerTargets, on
       {previews.map((p, i) => {
         const color = p.kind === "split" ? SPLIT_COLOR : p.kind === "ghost" ? "#e2e8f0" : "#f8fafc";
         return (
-          <g key={`pv-${i}`} transform={`translate(${p.point.x} ${p.point.y})`} onClick={p.onClick} className="cursor-pointer">
+          <g
+            key={`pv-${i}`}
+            transform={`translate(${p.point.x} ${p.point.y})`}
+            onClick={p.onClick}
+            className="cursor-pointer"
+          >
             <circle r={0.42} fill={color} opacity={0.18} />
-            <circle r={0.42} fill="none" stroke={color} strokeWidth={0.07} strokeDasharray="0.14 0.1" className="pulse" />
+            <circle
+              r={0.42}
+              fill="none"
+              stroke={color}
+              strokeWidth={0.07}
+              strokeDasharray="0.14 0.1"
+              className="pulse"
+            />
             {p.label && (
               <text y={0.11} textAnchor="middle" fontSize={0.3} fontWeight={800} fill={color}>
                 {p.label}

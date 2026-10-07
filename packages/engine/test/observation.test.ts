@@ -55,7 +55,11 @@ describe("Observation in Tactical (choice) mode", () => {
 
   it("lets the observer measure then strike, with no coin", () => {
     // Green stands 3 behind marker 0 (absolute 20). Force it there, then land on it.
-    const s = withRoll(place(split(game({ observationMode: "choice" }), 0, 0, 18, [20, 23]), 1, [rel("green", 17)]), 3, 1);
+    const s = withRoll(
+      place(split(game({ observationMode: "choice" }), 0, 0, 18, [20, 23]), 1, [rel("green", 17)]),
+      3,
+      1,
+    );
     const forced = apply(s, { type: "observe", target, marker: 0 }).state;
     const { state } = apply(forced, { type: "move", token: 0 });
     expect(state.players[0]!.tokens[0]!.pos).toBe(-1);

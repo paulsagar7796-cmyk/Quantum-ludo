@@ -74,6 +74,11 @@ describe("final scores", () => {
     const s = place(game(), 0, [10, 20, -1, HOME_POS]);
     s.players[0]!.q = 4;
     s.players[0]!.score = { home: 10, captures: 3, captured: -1 };
-    expect(finalScores(s, [1, 2, 3, 0])[0]).toMatchObject({ progress: 6, unspentQ: 2, finishBonus: 0, total: 10 + 3 - 1 + 6 + 2 });
+    expect(finalScores(s, [1, 2, 3, 0])[0]).toMatchObject({
+      progress: 6,
+      unspentQ: 2,
+      finishBonus: 0,
+      total: 10 + 3 - 1 + 6 + 2,
+    });
   });
 });

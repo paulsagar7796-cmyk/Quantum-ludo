@@ -138,7 +138,13 @@ function spend(ctx: Ctx, player: PlayerState, mechanic: Mechanic): void {
 function gainQ(ctx: Ctx, player: PlayerState, reason: "node" | "captured", square?: number): boolean {
   if (player.q >= ctx.s.config.rules.maxQ) return false;
   player.q += 1;
-  ctx.events.push({ type: "qGained", seat: player.seat, amount: 1, reason, ...(square !== undefined ? { square } : {}) });
+  ctx.events.push({
+    type: "qGained",
+    seat: player.seat,
+    amount: 1,
+    reason,
+    ...(square !== undefined ? { square } : {}),
+  });
   return true;
 }
 

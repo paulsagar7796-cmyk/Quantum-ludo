@@ -1,0 +1,8 @@
+# Generated or not ours to format
+pnpm-lock.yaml
+**/dist/
+**/dev-dist/
+test-results/
+playwright-report/
+# Prose stays exactly as written
+*.md

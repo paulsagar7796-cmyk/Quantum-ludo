@@ -7,9 +7,9 @@ suite("move log text", () => {
   it("uses the right grammar for you and for others", () => {
     expect(describe({ type: "passed", seat: 0 }, name)?.text).toBe("You have no move");
     expect(describe({ type: "passed", seat: 1 }, name)?.text).toBe("The Racer has no move");
-    expect(describe({ type: "captured", seat: 1, victim: { seat: 0, token: 2 }, square: 7, wasSplit: false }, name)?.text).toBe(
-      "The Racer captured you",
-    );
+    expect(
+      describe({ type: "captured", seat: 1, victim: { seat: 0, token: 2 }, square: 7, wasSplit: false }, name)?.text,
+    ).toBe("The Racer captured you");
     expect(describe({ type: "knockback", seat: 0, token: 1, from: 30, to: 24 }, name)?.text).toBe(
       "Your linked partner was knocked back 6",
     );

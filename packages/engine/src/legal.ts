@@ -81,7 +81,10 @@ export function legalActions(state: GameState): Action[] {
 
   if (state.phase === "upkeep") {
     if (mustCollapse(state)) {
-      const out: Action[] = [{ type: "collapse", marker: 0 }, { type: "collapse", marker: 1 }];
+      const out: Action[] = [
+        { type: "collapse", marker: 0 },
+        { type: "collapse", marker: 1 },
+      ];
       if (canHold(state)) out.push({ type: "hold" });
       return out;
     }
