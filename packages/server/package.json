@@ -1,0 +1,14 @@
+{
+  "name": "@qludo/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-authoritative room logic for online Quantum Ludo (shared by the Edge Function and clients)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qludo/bots": "workspace:*",
+    "@qludo/engine": "workspace:*"
+  }
+}

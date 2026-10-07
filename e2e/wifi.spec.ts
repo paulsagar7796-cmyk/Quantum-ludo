@@ -59,13 +59,14 @@ async function pairUp(browser: import("@playwright/test").Browser) {
 
   // Host opens a room and creates an invite for the Yellow seat.
   await host.goto("/");
-  await host.getByRole("button", { name: "Host Wi-Fi game" }).click();
+  await host.getByRole("button", { name: "Host game" }).click();
+  await host.getByRole("button", { name: /Same Wi-Fi/ }).click();
   await host.getByRole("button", { name: "Invite player" }).click();
   const invite = await readCode(host, "Invite for Yellow");
 
   // Guest pastes the invite and gets a reply code.
   await guest.goto("/");
-  await guest.getByRole("button", { name: "Join a game on this Wi-Fi" }).click();
+  await guest.getByRole("button", { name: "Join on this Wi-Fi" }).click();
   await guest.getByRole("textbox", { name: "Your name" }).fill("Sam");
   await guest.getByRole("textbox", { name: "Or paste the invite code" }).fill(invite);
   await guest.getByRole("button", { name: "Use pasted code" }).click();

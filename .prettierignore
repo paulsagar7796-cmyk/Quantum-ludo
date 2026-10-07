@@ -3,6 +3,8 @@ pnpm-lock.yaml
 **/dist/
 **/dev-dist/
 test-results/
+supabase/functions/rooms/qludo.js
+supabase/.temp/
 playwright-report/
 # Prose stays exactly as written
 *.md
