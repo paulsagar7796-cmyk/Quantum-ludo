@@ -2,7 +2,8 @@ import { PERSONALITIES, PERSONALITY_IDS, type PersonalityId } from "@qludo/bots"
 import { SEAT_COLORS, type ObservationMode, type PlayerCount } from "@qludo/engine";
 import { useState } from "react";
 import { COLOR_HEX, COLOR_NAME, MECHANIC } from "../game/labels";
-import type { BotSpeed, MatchConfig, SeatConfig } from "../game/match";
+import { seatName, type BotSpeed, type MatchConfig, type SeatConfig } from "../game/match";
+import type { SavedGame } from "../game/save";
 import { sfx } from "../game/sound";
 import { Help } from "./Help";
 
@@ -42,7 +43,48 @@ const MODE_TEXT: Record<ObservationMode, string> = {
   choice: "You choose where an opponent's Split lands, then strike it with the same roll. Pure calculation.",
 };
 
-export function Lobby({ initial, onStart }: { initial: MatchConfig; onStart: (m: MatchConfig) => void }) {
+function ago(ms: number): string {
+  const min = Math.round(ms / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}
+
+function ResumeCard({ saved, onResume, onDiscard }: { saved: SavedGame; onResume: () => void; onDiscard: () => void }) {
+  const players = saved.state.players.map((p) => seatName(saved.match, p.seat));
+  return (
+    <section className="rounded-2xl border border-split/50 bg-split/10 p-3" aria-label="Game in progress">
+      <h2 className="text-sm font-semibold text-split">Game in progress</h2>
+      <p className="mt-1 text-sm">
+        Round {saved.state.round} · {players.join(", ")}
+      </p>
+      <p className="text-xs text-muted">Saved {ago(Date.now() - saved.savedAt)}</p>
+      <div className="mt-3 flex gap-2">
+        <button type="button" onClick={onResume} className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200">
+          Resume game
+        </button>
+        <button type="button" onClick={onDiscard} className="min-h-11 rounded-xl border border-line bg-panel-2 px-4 text-sm font-semibold hover:bg-line">
+          Discard
+        </button>
+      </div>
+    </section>
+  );
+}
+
+export function Lobby({
+  initial,
+  saved,
+  onStart,
+  onResume,
+  onDiscard,
+}: {
+  initial: MatchConfig;
+  saved: SavedGame | null;
+  onStart: (m: MatchConfig) => void;
+  onResume: (s: SavedGame) => void;
+  onDiscard: () => void;
+}) {
   const [m, setM] = useState<MatchConfig>(initial);
   const [showHelp, setShowHelp] = useState(false);
   const [soundOn, setSoundOn] = useState(sfx.enabled);
@@ -58,6 +100,8 @@ export function Lobby({ initial, onStart }: { initial: MatchConfig; onStart: (m:
         <h1 className="text-3xl font-black tracking-tight">Quantum Ludo</h1>
         <p className="mt-1 text-sm text-muted">Ludo, evolved. Split, Link, Ghost and Force your way home.</p>
       </header>
+
+      {saved && <ResumeCard saved={saved} onResume={() => onResume(saved)} onDiscard={onDiscard} />}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold text-muted">Players</h2>
@@ -163,7 +207,7 @@ export function Lobby({ initial, onStart }: { initial: MatchConfig; onStart: (m:
 
       <div className="mt-auto flex flex-col gap-2">
         <button type="button" onClick={() => onStart(m)} className="min-h-12 rounded-xl bg-white text-base font-bold text-ink hover:bg-slate-200">
-          Start game
+          {saved ? "Start a new game" : "Start game"}
         </button>
         <button type="button" onClick={() => setShowHelp(true)} className="min-h-11 rounded-xl border border-line bg-panel text-sm font-semibold hover:bg-panel-2">
           How to play

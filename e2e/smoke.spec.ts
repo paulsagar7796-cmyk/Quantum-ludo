@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { expect, test, type Page } from "@playwright/test";
 
 /** Seeds the saved lobby settings before the app loads. */
@@ -7,7 +8,12 @@ async function seedLobby(page: Page, seats: ("human" | "bot")[], botSpeed = "ins
     playerCount: seats.length,
     observationMode: "choice",
     botSpeed,
-    seats: [0, 1, 2, 3].map((i) => ({ kind: seats[i] ?? "bot", bot: bots[i], name: seats[i] === "human" ? "You" : "" })),
+    // The first human is "You"; any others are "Player 2", "Player 3"...
+    seats: [0, 1, 2, 3].map((i) => ({
+      kind: seats[i] ?? "bot",
+      bot: bots[i],
+      name: seats[i] === "human" ? (seats.indexOf("human") === i ? "You" : `Player ${i + 1}`) : "",
+    })),
   };
   await page.addInitScript((m) => localStorage.setItem("qludo.match.v1", JSON.stringify(m)), match);
 }
@@ -30,7 +36,7 @@ test("a human can roll and play a turn", async ({ page }) => {
 
   // Keep acting until the log shows we rolled at least three times.
   for (let i = 0; i < 200; i++) {
-    for (const label of [/^Roll/, /^Move/, /^Land on A/, /^Pass/]) {
+    for (const label of [/^Roll/, /^Move(?!s)/, /^Land on A/, /^Pass/]) {
       const b = page.getByRole("button", { name: label });
       if (await b.isVisible().catch(() => false)) await b.click();
     }
@@ -73,7 +79,7 @@ for (const mechanic of ["Split", "Ghost"] as const) {
       const token = page.getByRole("button", { name: /^Token \d/ });
       if (await token.first().isVisible().catch(() => false)) await token.first().click();
       if (await quantum.isVisible().catch(() => false)) break;
-      const move = page.getByRole("button", { name: /^Move/ });
+      const move = page.getByRole("button", { name: /^Move(?!s)/ });
       if (await move.isVisible().catch(() => false)) await move.click();
     }
     await quantum.click();
@@ -111,4 +117,42 @@ test("the die tumbles before showing the roll, with sound", async ({ page }) => 
   await expect(page.getByText(/^You rolled a [1-6]$/).first()).toBeAttached();
   expect(await page.evaluate(() => (window as unknown as { __oscillators: number }).__oscillators)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
+});
+
+test("a game survives a reload and can be resumed", async ({ page }) => {
+  await seedLobby(page, ["human", "bot"], "fast");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start game" }).click();
+  await page.getByRole("button", { name: /^Roll/ }).click();
+  await expect(page.getByRole("img", { name: /^Die shows [1-6]$/ })).toBeVisible({ timeout: 2000 });
+  const rolled = await page.getByText(/^You rolled a [1-6]$/).first().textContent();
+
+  await page.reload();
+  const card = page.getByRole("region", { name: "Game in progress" });
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: "Resume game" }).click();
+  await expect(page.getByRole("img", { name: "Quantum Ludo board" })).toBeVisible();
+  await expect(page.getByText(rolled!, { exact: true }).first()).toBeAttached();
+});
+
+test("hot-seat play hands the device over between humans", async ({ page }) => {
+  await seedLobby(page, ["human", "human"], "fast");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start game" }).click();
+  const handoff = page.getByRole("dialog", { name: "Pass the device" });
+  await expect(handoff.getByText("Your turn")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Roll/ })).toBeHidden();
+  await handoff.getByRole("button", { name: /ready/ }).click();
+
+  // Play until the turn passes to the second human.
+  for (let i = 0; i < 50 && !(await handoff.isVisible().catch(() => false)); i++) {
+    for (const label of [/^Roll/, /^Move(?!s)/, /^Land on A/, /^Pass/]) {
+      const b = page.getByRole("button", { name: label });
+      if (await b.isVisible().catch(() => false)) await b.click();
+    }
+    const token = page.getByRole("button", { name: /^Token \d/ });
+    if (await token.first().isVisible().catch(() => false)) await token.first().click();
+    await page.waitForTimeout(150);
+  }
+  await expect(handoff.getByText("Player 2’s turn")).toBeVisible();
 });

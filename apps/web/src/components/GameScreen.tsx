@@ -4,6 +4,7 @@ import { canLink, forceOptions, has, linkableTokens, tokenChoices, type TokenCho
 import { COLOR_HEX, MECHANIC } from "../game/labels";
 import { pointFor } from "../game/layout";
 import type { MatchConfig } from "../game/match";
+import type { SavedGame } from "../game/save";
 import { sfx } from "../game/sound";
 import { useGame } from "../game/useGame";
 import { ActionBar, type ActionButton } from "./ActionBar";
@@ -12,7 +13,7 @@ import { Die } from "./Die";
 import { EventLog } from "./EventLog";
 import { Help } from "./Help";
 import { Modal } from "./Modal";
-import { PlayerPanel } from "./PlayerPanel";
+import { ColorChip, PlayerPanel } from "./PlayerPanel";
 import { Results } from "./Results";
 
 type Mode = "idle" | "link" | "force";
@@ -38,11 +39,25 @@ function SpeakerIcon({ on }: { on: boolean }) {
   );
 }
 
-export function GameScreen({ match, onNewGame, onRematch }: { match: MatchConfig; onNewGame: () => void; onRematch: () => void }) {
-  const g = useGame(match);
+export function GameScreen({
+  match,
+  resume,
+  onNewGame,
+  onRematch,
+}: {
+  match: MatchConfig;
+  resume: SavedGame | null;
+  onNewGame: () => void;
+  onRematch: () => void;
+}) {
+  const g = useGame(match, resume);
   const { state, legal, dispatch, isHumanTurn, name } = g;
-  // While the die tumbles, the result is hidden and nothing can be chosen yet.
-  const canAct = isHumanTurn && !g.rolling;
+  // Hot-seat with several humans: hand the device over at the start of each human turn.
+  const humanCount = match.seats.slice(0, match.playerCount).filter((s) => s.kind === "human").length;
+  const [readyTurn, setReadyTurn] = useState<number | null>(null);
+  const handoff = humanCount >= 2 && isHumanTurn && state.phase === "upkeep" && !state.bonus && readyTurn !== state.turn;
+  // While the die tumbles (or the device is being passed), nothing can be chosen yet.
+  const canAct = isHumanTurn && !g.rolling && !handoff;
   const [soundOn, setSoundOn] = useState(sfx.enabled);
   const me = state.players[state.current]!;
 
@@ -139,6 +154,8 @@ export function GameScreen({ match, onNewGame, onRematch }: { match: MatchConfig
         {name(g.lastRoll.seat) === "You" ? "are" : "is"} rolling…
       </span>
     );
+  } else if (handoff) {
+    prompt = <span>Waiting for {name(me.seat) === "You" ? "you" : name(me.seat)} to take the device…</span>;
   } else if (!isHumanTurn) {
     prompt = (
       <span>
@@ -315,6 +332,25 @@ export function GameScreen({ match, onNewGame, onRematch }: { match: MatchConfig
         </div>
       </aside>
 
+      {handoff && (
+        <Modal title="Pass the device">
+          <div className="flex flex-col items-center gap-4 py-2 text-center">
+            <ColorChip player={me} size={48} />
+            <p className="text-xl font-bold" style={{ color: COLOR_HEX[me.color].base }}>
+              {name(me.seat) === "You" ? "Your turn" : `${name(me.seat)}’s turn`}
+            </p>
+            <p className="text-sm text-muted">Hand the device over, then tap when ready.</p>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => setReadyTurn(state.turn)}
+              className="min-h-12 w-full rounded-xl bg-white text-base font-bold text-ink hover:bg-slate-200"
+            >
+              I&rsquo;m ready
+            </button>
+          </div>
+        </Modal>
+      )}
       {showHelp && <Help onClose={() => setShowHelp(false)} />}
       {showLog && (
         <Modal title="Move log" onClose={() => setShowLog(false)}>
@@ -322,11 +358,11 @@ export function GameScreen({ match, onNewGame, onRematch }: { match: MatchConfig
         </Modal>
       )}
       {confirmQuit && (
-        <Modal title="Leave this game?" onClose={() => setConfirmQuit(false)}>
-          <p className="mb-4 text-sm text-muted">The game in progress will be lost.</p>
+        <Modal title="Back to the lobby?" onClose={() => setConfirmQuit(false)}>
+          <p className="mb-4 text-sm text-muted">Your game is saved. You can resume it from the lobby.</p>
           <div className="flex gap-2">
             <button type="button" onClick={onNewGame} className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200">
-              Leave
+              Go to lobby
             </button>
             <button type="button" onClick={() => setConfirmQuit(false)} className="min-h-11 flex-1 rounded-xl border border-line bg-panel-2 font-semibold hover:bg-line">
               Keep playing

@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { describe, type LogLine } from "./format";
 import { seatName, type BotSpeed, type MatchConfig } from "./match";
+import { clearSave, writeSave, type SavedGame } from "./save";
 import { cuesFor, sfx } from "./sound";
 
 const BOT_DELAY: Record<BotSpeed, number> = { fast: 250, normal: 650, slow: 1200, instant: 0 };
@@ -47,19 +48,22 @@ export interface GameController {
  * Local (hot-seat) game. This device is the authority: it owns the RNG and runs the bots.
  * M2 will put the same engine behind a Transport so a host or server can be the authority instead.
  */
-export function useGame(match: MatchConfig): GameController {
+export function useGame(match: MatchConfig, resume?: SavedGame | null): GameController {
   const rng = useRef<SeededRng>(null!);
-  if (!rng.current) rng.current = new SeededRng(randomSeed());
+  if (!rng.current) {
+    rng.current = new SeededRng(0);
+    rng.current.setState(resume ? resume.rng : randomSeed());
+  }
 
-  const [state, setState] = useState(() =>
-    createGame({ playerCount: match.playerCount, observationMode: match.observationMode }),
+  const [state, setState] = useState(
+    () => resume?.state ?? createGame({ playerCount: match.playerCount, observationMode: match.observationMode }),
   );
-  const [log, setLog] = useState<LogLine[]>([]);
+  const [log, setLog] = useState<LogLine[]>(() => resume?.log ?? []);
   const [lastEvents, setLastEvents] = useState<GameEvent[]>([]);
-  const [lastRoll, setLastRoll] = useState<{ seat: number; value: number; n: number } | null>(null);
+  const [lastRoll, setLastRoll] = useState<{ seat: number; value: number; n: number } | null>(() => resume?.lastRoll ?? null);
   const [rolling, setRolling] = useState(false);
   const stateRef = useRef(state);
-  const nextId = useRef(0);
+  const nextId = useRef(resume ? Math.max(0, ...resume.log.map((l) => l.id + 1)) : 0);
   const rollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => void (rollTimer.current && clearTimeout(rollTimer.current)), []);
 
@@ -104,6 +108,12 @@ export function useGame(match: MatchConfig): GameController {
     },
     [name, humanSeats, match.botSpeed],
   );
+
+  // Save after every change so the game survives a refresh; a finished game is not resumable.
+  useEffect(() => {
+    if (state.phase === "over") clearSave();
+    else writeSave({ match, state, rng: rng.current.getState(), log, lastRoll });
+  }, [match, state, log, lastRoll]);
 
   const bot = state.phase === "over" ? null : bots[state.current];
   useEffect(() => {
