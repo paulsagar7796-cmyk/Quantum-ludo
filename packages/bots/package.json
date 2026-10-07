@@ -1,0 +1,13 @@
+{
+  "name": "@qludo/bots",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bot personalities for Quantum Ludo",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qludo/engine": "workspace:*"
+  }
+}

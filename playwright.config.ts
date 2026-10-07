@@ -1,0 +1,18 @@
+import { defineConfig, devices } from "@playwright/test";
+
+const PORT = 5199;
+
+export default defineConfig({
+  testDir: "e2e",
+  timeout: 90_000,
+  use: { baseURL: `http://127.0.0.1:${PORT}` },
+  projects: [
+    { name: "phone", use: { ...devices["Pixel 7"] } },
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
+  ],
+  webServer: {
+    command: `pnpm --filter @qludo/web exec vite --port ${PORT} --strictPort --host 127.0.0.1`,
+    url: `http://127.0.0.1:${PORT}`,
+    reuseExistingServer: true,
+  },
+});

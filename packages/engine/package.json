@@ -1,0 +1,10 @@
+{
+  "name": "@qludo/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure, deterministic rules engine for Quantum Ludo",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

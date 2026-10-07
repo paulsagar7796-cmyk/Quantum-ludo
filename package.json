@@ -1,0 +1,23 @@
+{
+  "name": "quantum-ludo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web",
+    "sim": "pnpm --filter @qludo/sim run sim",
+    "dev": "pnpm --filter @qludo/web run dev",
+    "build": "pnpm --filter @qludo/web run build",
+    "preview": "pnpm --filter @qludo/web run preview",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

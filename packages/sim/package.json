@@ -1,0 +1,18 @@
+{
+  "name": "@qludo/sim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bot-vs-bot balance simulation harness for Quantum Ludo",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "sim": "tsx src/cli.ts",
+    "availability": "tsx src/availability.ts"
+  },
+  "dependencies": {
+    "@qludo/bots": "workspace:*",
+    "@qludo/engine": "workspace:*"
+  }
+}
