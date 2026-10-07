@@ -224,7 +224,10 @@ export function GameScreen({
     );
     const kind = g.seatKind(me.seat);
     prompt =
-      kind === "remote" && g.offline.has(me.seat) ? (
+      kind === "local" ? (
+        // Our own move is on its way to whoever runs the game.
+        <span className="text-muted">Sending your move…</span>
+      ) : kind === "remote" && g.offline.has(me.seat) ? (
         <span>{who} is disconnected. Waiting for them to rejoin…</span>
       ) : kind === "bot" ? (
         <span>{who} is thinking…</span>

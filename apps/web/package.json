@@ -12,6 +12,8 @@
   "dependencies": {
     "@qludo/bots": "workspace:*",
     "@qludo/engine": "workspace:*",
+    "@qludo/server": "workspace:*",
+    "@supabase/supabase-js": "^2.117.2",
     "jsqr": "^1.4.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",

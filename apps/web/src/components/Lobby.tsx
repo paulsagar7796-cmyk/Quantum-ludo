@@ -4,8 +4,10 @@ import { useState } from "react";
 import { COLOR_HEX, COLOR_NAME, MECHANIC } from "../game/labels";
 import { seatName, type BotSpeed, type MatchConfig, type SeatConfig } from "../game/match";
 import type { SavedGame } from "../game/save";
+import type { OnlineSession } from "../online/useOnlineRoom";
 import { sfx } from "../game/sound";
 import { Help } from "./Help";
+import { Modal } from "./Modal";
 import { Stats } from "./Stats";
 
 function Segmented<T extends string | number>({
@@ -95,14 +97,24 @@ export function Lobby({
   onStart,
   onResume,
   onDiscard,
-  onJoin,
+  onJoinWifi,
+  onJoinOnline,
+  online,
+  onRejoinOnline,
+  onForgetOnline,
 }: {
   initial: MatchConfig;
   saved: SavedGame | null;
-  onStart: (m: MatchConfig) => void;
+  /** `online` hosts an internet room; otherwise remote seats join over the local Wi-Fi. */
+  onStart: (m: MatchConfig, how: "here" | "wifi" | "online") => void;
   onResume: (s: SavedGame) => void;
   onDiscard: () => void;
-  onJoin: () => void;
+  onJoinWifi: () => void;
+  onJoinOnline: () => void;
+  /** An online room this device is in, to rejoin after a refresh. */
+  online: OnlineSession | null;
+  onRejoinOnline: () => void;
+  onForgetOnline: () => void;
 }) {
   const [m, setM] = useState<MatchConfig>(initial);
   const [showHelp, setShowHelp] = useState(false);
@@ -110,7 +122,8 @@ export function Lobby({
   const [soundOn, setSoundOn] = useState(sfx.enabled);
   const colors = SEAT_COLORS[m.playerCount];
   const hosting = m.seats.slice(0, m.playerCount).some((s) => s.kind === "remote");
-  const startLabel = hosting ? "Host Wi-Fi game" : saved ? "Start a new game" : "Start game";
+  const startLabel = hosting ? "Host game" : saved ? "Start a new game" : "Start game";
+  const [chooseHost, setChooseHost] = useState(false);
 
   const setSeat = (i: number, patch: Partial<SeatConfig>) =>
     setM((prev) => ({ ...prev, seats: prev.seats.map((s, j) => (j === i ? { ...s, ...patch } : s)) }));
@@ -123,6 +136,28 @@ export function Lobby({
         <p className="mt-1 text-sm text-muted">Ludo, evolved. Split, Link, Ghost and Force your way home.</p>
       </header>
 
+      {online && (
+        <section className="rounded-2xl border border-link/50 bg-link/10 p-3" aria-label="Online room">
+          <h2 className="text-sm font-semibold text-link">Online room {online.code}</h2>
+          <p className="mt-1 text-xs text-muted">You are in this room. Rejoin to carry on playing.</p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={onRejoinOnline}
+              className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200"
+            >
+              Rejoin room
+            </button>
+            <button
+              type="button"
+              onClick={onForgetOnline}
+              className="min-h-11 rounded-xl border border-line bg-panel-2 px-4 text-sm font-semibold hover:bg-line"
+            >
+              Leave
+            </button>
+          </div>
+        </section>
+      )}
       {saved && <ResumeCard saved={saved} onResume={() => onResume(saved)} onDiscard={onDiscard} />}
 
       <section className="flex flex-col gap-2">
@@ -242,18 +277,27 @@ export function Lobby({
       <div className="mt-auto flex flex-col gap-2">
         <button
           type="button"
-          onClick={() => onStart(m)}
+          onClick={() => (hosting ? setChooseHost(true) : onStart(m, "here"))}
           className="min-h-12 rounded-xl bg-white text-base font-bold text-ink hover:bg-slate-200"
         >
           {startLabel}
         </button>
-        <button
-          type="button"
-          onClick={onJoin}
-          className="min-h-11 rounded-xl border border-link/60 bg-link/10 text-sm font-semibold text-link hover:bg-link/20"
-        >
-          Join a game on this Wi-Fi
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onJoinOnline}
+            className="min-h-11 flex-1 rounded-xl border border-link/60 bg-link/10 text-sm font-semibold text-link hover:bg-link/20"
+          >
+            Join online room
+          </button>
+          <button
+            type="button"
+            onClick={onJoinWifi}
+            className="min-h-11 flex-1 rounded-xl border border-link/60 bg-link/10 text-sm font-semibold text-link hover:bg-link/20"
+          >
+            Join on this Wi-Fi
+          </button>
+        </div>
         <div className="flex gap-2">
           <button
             type="button"
@@ -273,6 +317,28 @@ export function Lobby({
       </div>
       {showHelp && <Help onClose={() => setShowHelp(false)} />}
       {showStats && <Stats onClose={() => setShowStats(false)} />}
+      {chooseHost && (
+        <Modal title="How will friends join?" onClose={() => setChooseHost(false)}>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => onStart(m, "online")}
+              className="rounded-xl border border-line bg-panel-2 p-3 text-left hover:bg-line"
+            >
+              <span className="block font-semibold">Online room</span>
+              <span className="text-sm text-muted">From anywhere, with a room code. Needs internet.</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onStart(m, "wifi")}
+              className="rounded-xl border border-line bg-panel-2 p-3 text-left hover:bg-line"
+            >
+              <span className="block font-semibold">Same Wi-Fi</span>
+              <span className="text-sm text-muted">Nearby devices pair by QR code. No internet needed.</span>
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

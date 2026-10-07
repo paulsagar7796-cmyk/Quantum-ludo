@@ -73,8 +73,8 @@ function ConnectionPanel({
             {slot.status === "inviting" && slot.code && (
               <div className="mt-3 flex flex-col gap-3">
                 <p className="text-sm text-muted">
-                  <b className="text-text">1.</b> On the other device, tap <b className="text-text">Join a game</b> and
-                  scan this invite.
+                  <b className="text-text">1.</b> On the other device, tap{" "}
+                  <b className="text-text">Join on this Wi-Fi</b> and scan this invite.
                 </p>
                 <QrCode code={slot.code} label={`Invite for ${COLOR_NAME[color]}`} />
                 <p className="text-sm text-muted">

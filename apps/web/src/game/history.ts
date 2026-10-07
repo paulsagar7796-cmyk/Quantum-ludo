@@ -5,7 +5,7 @@ export interface GameRecord {
   id: string;
   endedAt: number;
   /** How this device took part. */
-  mode: "local" | "host" | "guest";
+  mode: "local" | "host" | "guest" | "online";
   observationMode: ObservationMode;
   rounds: number;
   /** "finish" or the mercy cap. */

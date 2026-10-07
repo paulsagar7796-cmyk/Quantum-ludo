@@ -4,7 +4,12 @@ import { COLOR_HEX } from "../game/labels";
 import { Modal } from "./Modal";
 
 const PLACE = ["1st", "2nd", "3rd", "4th"];
-const MODE: Record<GameRecord["mode"], string> = { local: "This device", host: "Wi-Fi (host)", guest: "Wi-Fi (guest)" };
+const MODE: Record<GameRecord["mode"], string> = {
+  local: "This device",
+  host: "Wi-Fi (host)",
+  guest: "Wi-Fi (guest)",
+  online: "Online",
+};
 
 function Tile({ label, value }: { label: string; value: string }) {
   return (

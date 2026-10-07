@@ -60,7 +60,7 @@ export function JoinScreen({ onExit }: { onExit: () => void }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-xl flex-col gap-4 px-4 py-6">
       <header>
-        <h1 className="text-2xl font-black tracking-tight">Join a game</h1>
+        <h1 className="text-2xl font-black tracking-tight">Join on this Wi-Fi</h1>
         <p className="mt-1 text-sm text-muted">
           Join the host&rsquo;s Wi-Fi (or their phone&rsquo;s hotspot) first. No internet is needed.
         </p>
