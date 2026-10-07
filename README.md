@@ -6,6 +6,8 @@ Quantum Ludo is a quantum-inspired take on the family board game. You still roll
 
 It is built as a competition. The aim is to reward strategic thinking, good decisions under uncertainty, probability awareness and the ability to adapt when the board changes. This isn't about waiting on a lucky roll. It turns a family game of chance into a ruthless tactical knife fight. Manage your economy, manipulate probability, and collapse the board to your advantage
 
+Demo site: https://quantum-ludo.vercel.app
+
 > **Status:** playable in the browser: hot-seat, bots, same-Wi-Fi multiplayer and online rooms. Rules are draft v0.3, balance-tested with bot simulations.
 
 ## Contents
