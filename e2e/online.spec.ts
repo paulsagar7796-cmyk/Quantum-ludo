@@ -73,14 +73,17 @@ test("two players meet in an online room and play", async ({ browser }, info) =>
   // Each sees the other's rolls; the Gambler bot plays on the server between them.
   const benRolls = () => host.getByText(/^Ben rolled a [1-6]$/).count();
   const anaRolls = () => guest.getByText(/^Ana rolled a [1-6]$/).count();
-  for (let i = 0; i < 300 && ((await benRolls()) < 2 || (await anaRolls()) < 2); i++) {
+  const botRolls = () => host.getByText(/^The Gambler rolled a [1-6]$/).count();
+  // A 6 gives another roll, so wait for the bot's turn too rather than just counting rolls.
+  const done = async () => (await benRolls()) >= 2 && (await anaRolls()) >= 2 && (await botRolls()) >= 1;
+  for (let i = 0; i < 300 && !(await done()); i++) {
     await act(host);
     await act(guest);
     await host.waitForTimeout(200);
   }
   expect(await benRolls()).toBeGreaterThanOrEqual(2);
   expect(await anaRolls()).toBeGreaterThanOrEqual(2);
-  expect(await host.getByText(/^The Gambler rolled a [1-6]$/).count()).toBeGreaterThanOrEqual(1);
+  expect(await botRolls()).toBeGreaterThanOrEqual(1);
 
   // Once both are idle, both boards show the same scores.
   await host.waitForTimeout(3000);
