@@ -38,6 +38,13 @@ function Segmented<T extends string | number>({
   );
 }
 
+const SEAT_KIND_LABEL: Record<SeatConfig["kind"], string> = { human: "Human", bot: "Bot", remote: "Remote" };
+const SEAT_KIND_HINT: Record<SeatConfig["kind"], string> = {
+  human: "Plays on this device",
+  bot: "Played by the computer",
+  remote: "A friend joins from their own device on the same Wi-Fi",
+};
+
 const MODE_TEXT: Record<ObservationMode, string> = {
   coin: "Force flips a coin to decide where an opponent's Split lands. Gamble, swings and upsets.",
   choice: "You choose where an opponent's Split lands, then strike it with the same roll. Pure calculation.",
@@ -87,17 +94,21 @@ export function Lobby({
   onStart,
   onResume,
   onDiscard,
+  onJoin,
 }: {
   initial: MatchConfig;
   saved: SavedGame | null;
   onStart: (m: MatchConfig) => void;
   onResume: (s: SavedGame) => void;
   onDiscard: () => void;
+  onJoin: () => void;
 }) {
   const [m, setM] = useState<MatchConfig>(initial);
   const [showHelp, setShowHelp] = useState(false);
   const [soundOn, setSoundOn] = useState(sfx.enabled);
   const colors = SEAT_COLORS[m.playerCount];
+  const hosting = m.seats.slice(0, m.playerCount).some((s) => s.kind === "remote");
+  const startLabel = hosting ? "Host Wi-Fi game" : saved ? "Start a new game" : "Start game";
 
   const setSeat = (i: number, patch: Partial<SeatConfig>) =>
     setM((prev) => ({ ...prev, seats: prev.seats.map((s, j) => (j === i ? { ...s, ...patch } : s)) }));
@@ -130,24 +141,32 @@ export function Lobby({
                   style={{ background: COLOR_HEX[color].base, borderColor: COLOR_HEX[color].deep }}
                   aria-hidden
                 />
-                <input
-                  value={seat.name}
-                  onChange={(e) => setSeat(i, { name: e.target.value })}
-                  placeholder={seat.kind === "bot" ? PERSONALITIES[seat.bot].name : COLOR_NAME[color]}
-                  aria-label={`${COLOR_NAME[color]} player name`}
-                  maxLength={16}
-                  className="min-h-10 min-w-0 flex-1 rounded-lg border border-line bg-panel-2 px-2 text-sm"
-                />
+                {seat.kind === "remote" ? (
+                  <span className="min-h-10 min-w-0 flex-1 content-center px-2 text-sm text-muted">
+                    Joins from another device
+                  </span>
+                ) : (
+                  <input
+                    value={seat.name}
+                    onChange={(e) => setSeat(i, { name: e.target.value })}
+                    placeholder={seat.kind === "bot" ? PERSONALITIES[seat.bot].name : COLOR_NAME[color]}
+                    aria-label={`${COLOR_NAME[color]} player name`}
+                    maxLength={16}
+                    className="min-h-10 min-w-0 flex-1 rounded-lg border border-line bg-panel-2 px-2 text-sm"
+                  />
+                )}
                 <div className="flex rounded-lg border border-line bg-panel-2 p-0.5 text-xs font-semibold">
-                  {(["human", "bot"] as const).map((k) => (
+                  {(["human", "bot", "remote"] as const).map((k) => (
                     <button
                       key={k}
                       type="button"
                       aria-pressed={seat.kind === k}
+                      aria-label={`${COLOR_NAME[color]}: ${SEAT_KIND_LABEL[k]}`}
+                      title={SEAT_KIND_HINT[k]}
                       onClick={() => setSeat(i, { kind: k })}
                       className={`min-h-9 rounded-md px-2.5 ${seat.kind === k ? "bg-white text-ink" : "text-muted"}`}
                     >
-                      {k === "human" ? "Human" : "Bot"}
+                      {SEAT_KIND_LABEL[k]}
                     </button>
                   ))}
                 </div>
@@ -224,7 +243,14 @@ export function Lobby({
           onClick={() => onStart(m)}
           className="min-h-12 rounded-xl bg-white text-base font-bold text-ink hover:bg-slate-200"
         >
-          {saved ? "Start a new game" : "Start game"}
+          {startLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onJoin}
+          className="min-h-11 rounded-xl border border-link/60 bg-link/10 text-sm font-semibold text-link hover:bg-link/20"
+        >
+          Join a game on this Wi-Fi
         </button>
         <button
           type="button"

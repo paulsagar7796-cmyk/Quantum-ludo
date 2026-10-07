@@ -35,12 +35,13 @@ export function points(p: PlayerState): number {
 export function PlayerPanel({
   state,
   name,
-  isBot,
+  badge,
   compact,
 }: {
   state: GameState;
   name: (seat: number) => string;
-  isBot: (seat: number) => boolean;
+  /** Small tag after the name: "bot", "remote", "offline". */
+  badge: (seat: number) => string | null;
   compact?: boolean;
 }) {
   const maxQ = state.config.rules.maxQ;
@@ -60,8 +61,14 @@ export function PlayerPanel({
             <div className="flex items-center gap-1.5">
               <ColorChip player={p} size={compact ? 14 : 18} />
               <span className="truncate text-sm font-semibold">{name(p.seat)}</span>
-              {isBot(p.seat) && (
-                <span className="rounded bg-line px-1 text-[10px] uppercase tracking-wide text-muted">bot</span>
+              {badge(p.seat) && (
+                <span
+                  className={`rounded px-1 text-[10px] uppercase tracking-wide ${
+                    badge(p.seat) === "offline" ? "bg-amber-400/20 text-amber-200" : "bg-line text-muted"
+                  }`}
+                >
+                  {badge(p.seat)}
+                </span>
               )}
             </div>
             <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted">

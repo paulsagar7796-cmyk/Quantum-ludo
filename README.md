@@ -6,7 +6,7 @@ Quantum Ludo is a quantum-inspired take on the family board game. You still roll
 
 It is built as a competition. The aim is to reward strategic thinking, good decisions under uncertainty, probability awareness and the ability to adapt when the board changes. This isn't about waiting on a lucky roll. It turns a family game of chance into a ruthless tactical knife fight. Manage your economy, manipulate probability, and collapse the board to your advantage
 
-> **Status:** playable in the browser (local hot-seat and bots). Rules are draft v0.2, balance-tested with bot simulations. Online and offline multiplayer are next.
+> **Status:** playable in the browser: hot-seat, bots, and same-Wi-Fi multiplayer. Rules are draft v0.2, balance-tested with bot simulations. Online rooms are next.
 
 ## Contents
 - [Highlights](#highlights)
@@ -161,14 +161,24 @@ Four bots, each with a different personality and strategy:
 - **Web and desktop browser:** the UI is designed mobile-first and scales to a desktop window while keeping the same look and feel.
 - **Phone:** installable as a web app (PWA).
 - **Hot-seat:** 2 to 4 players on one device, with any seat switchable to a bot.
-- **Offline same-Wi-Fi lobbies** (planned): connect devices with a QR code, no internet needed once the app is installed.
+- **Same-Wi-Fi games**: up to 4 devices play together on one Wi-Fi network or a phone hotspot, with no internet and no accounts. See [Playing over Wi-Fi](#playing-over-wi-fi).
 - **Online rooms** (planned): join a friend's room with a code.
+
+## Playing over Wi-Fi
+1. **Host:** in the lobby, set a seat to **Remote** for each friend joining from their own device, then tap **Host Wi-Fi game**.
+2. **Host:** tap **Invite player**. An invite QR code appears.
+3. **Friend:** open the game, tap **Join a game on this Wi-Fi**, enter a name and scan the invite. A reply code appears.
+4. **Host:** tap **Read their reply** and scan the friend's reply. You are connected; repeat for each friend, then **Start game**.
+
+The host's device runs the game, rolls the dice and checks every move, so the result is the same on every screen. If a friend drops out, the host can invite them again or swap in a bot from **Players**. Codes can also be copied and pasted instead of scanned.
+
+Everyone must be on the same network. A phone hotspot works well; some public or guest Wi-Fi networks block devices from talking to each other.
 
 ## Tech stack
 - **Frontend:** React, Vite and Tailwind CSS
 - **Game logic:** TypeScript, a pure rules engine shared by client and server
 - **Online and real-time:** Supabase
-- **Offline multiplayer:** WebRTC with QR code pairing
+- **Same-Wi-Fi multiplayer:** WebRTC data channels, paired by QR codes (no server)
 - **Package manager:** pnpm
 
 ## Getting started
@@ -177,6 +187,7 @@ Requires Node 20+ and pnpm (`corepack enable pnpm`).
 ```bash
 pnpm install
 pnpm dev        # play at http://localhost:5199 (also reachable from a phone on the same Wi-Fi)
+pnpm dev:https  # same, over https, so phones can use the camera to scan pairing codes
 pnpm test       # rules engine, bots and UI unit tests
 pnpm e2e        # browser smoke tests on phone and desktop viewports
 pnpm sim -- --games=1000 --players=4 --mode=both   # bot-vs-bot balance report

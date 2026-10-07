@@ -1,10 +1,16 @@
 import tailwindcss from "@tailwindcss/vite";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+// HTTPS=1 serves over https with a self-signed certificate, so phones on the Wi-Fi get a
+// secure page: browsers only allow the camera (for QR pairing) on secure pages.
+const https = process.env.HTTPS === "1";
+
 export default defineConfig({
   plugins: [
+    ...(https ? [basicSsl()] : []),
     react(),
     tailwindcss(),
     VitePWA({

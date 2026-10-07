@@ -3,7 +3,8 @@ import { SEAT_COLORS, type ObservationMode, type PlayerCount } from "@qludo/engi
 import { COLOR_NAME } from "./labels";
 
 export interface SeatConfig {
-  kind: "human" | "bot";
+  /** human = played on this device, remote = another device on the Wi-Fi joins this seat. */
+  kind: "human" | "bot" | "remote";
   bot: PersonalityId;
   name: string;
 }

@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web",
     "sim": "pnpm --filter @qludo/sim run sim",
     "dev": "pnpm --filter @qludo/web run dev",
+    "dev:https": "pnpm --filter @qludo/web run dev:https",
     "build": "pnpm --filter @qludo/web run build",
     "preview": "pnpm --filter @qludo/web run preview",
     "e2e": "playwright test",

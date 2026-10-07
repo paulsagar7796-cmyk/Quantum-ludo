@@ -3,10 +3,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { canLink, forceOptions, has, linkableTokens, tokenChoices, type TokenChoice } from "../game/interaction";
 import { COLOR_HEX, MECHANIC } from "../game/labels";
 import { pointFor } from "../game/layout";
-import type { MatchConfig } from "../game/match";
-import type { SavedGame } from "../game/save";
+import type { GameController } from "../game/controller";
 import { sfx } from "../game/sound";
-import { useGame } from "../game/useGame";
 import { ActionBar, type ActionButton } from "./ActionBar";
 import { Board, type MarkerTarget, type Preview } from "./Board";
 import { Die } from "./Die";
@@ -50,20 +48,22 @@ function SpeakerIcon({ on }: { on: boolean }) {
 }
 
 export function GameScreen({
-  match,
-  resume,
-  onNewGame,
+  game: g,
+  onLeave,
   onRematch,
+  leaveText = "Your game is saved. You can resume it from the lobby.",
+  toolbarExtra,
 }: {
-  match: MatchConfig;
-  resume: SavedGame | null;
-  onNewGame: () => void;
-  onRematch: () => void;
+  game: GameController;
+  onLeave: () => void;
+  /** Omitted when this device can't start a rematch (a guest). */
+  onRematch?: () => void;
+  leaveText?: string;
+  toolbarExtra?: ReactNode;
 }) {
-  const g = useGame(match, resume);
   const { state, legal, dispatch, isHumanTurn, name } = g;
-  // Hot-seat with several humans: hand the device over at the start of each human turn.
-  const humanCount = match.seats.slice(0, match.playerCount).filter((s) => s.kind === "human").length;
+  // Hot-seat with several humans on this device: hand it over at the start of each human turn.
+  const humanCount = g.localSeats.size;
   const [readyTurn, setReadyTurn] = useState<number | null>(null);
   const handoff =
     humanCount >= 2 && isHumanTurn && state.phase === "upkeep" && !state.bonus && readyTurn !== state.turn;
@@ -197,14 +197,20 @@ export function GameScreen({
   } else if (handoff) {
     prompt = <span>Waiting for {name(me.seat) === "You" ? "you" : name(me.seat)} to take the device…</span>;
   } else if (!isHumanTurn) {
-    prompt = (
-      <span>
-        <span className="font-semibold" style={{ color: COLOR_HEX[me.color].base }}>
-          {name(me.seat)}
-        </span>{" "}
-        is thinking…
+    const who = (
+      <span className="font-semibold" style={{ color: COLOR_HEX[me.color].base }}>
+        {name(me.seat)}
       </span>
     );
+    const kind = g.seatKind(me.seat);
+    prompt =
+      kind === "remote" && g.offline.has(me.seat) ? (
+        <span>{who} is disconnected. Waiting for them to rejoin…</span>
+      ) : kind === "bot" ? (
+        <span>{who} is thinking…</span>
+      ) : (
+        <span>Waiting for {who}…</span>
+      );
   } else if (collapsing) {
     prompt = (
       <span>
@@ -401,10 +407,16 @@ export function GameScreen({
 
   const callout = headline(g.lastEvents, name);
   const rollerColor = g.lastRoll ? COLOR_HEX[state.players[g.lastRoll.seat]!.color].base : "#94a3b8";
-  const isBot = (seat: number) => match.seats[seat]!.kind === "bot";
+  const badge = (seat: number): string | null => {
+    const kind = g.seatKind(seat);
+    if (kind === "bot") return "bot";
+    if (kind === "remote") return g.offline.has(seat) ? "offline" : "remote";
+    return null;
+  };
 
   const toolbar = (
     <div className="flex items-center gap-1">
+      {toolbarExtra}
       <button
         type="button"
         onClick={() => {
@@ -446,7 +458,7 @@ export function GameScreen({
         <p className="text-xs text-muted">
           Round {state.round} · {modeLabel} Force
         </p>
-        <PlayerPanel state={state} name={name} isBot={isBot} />
+        <PlayerPanel state={state} name={name} badge={badge} />
         <div className="mt-auto">{toolbar}</div>
       </aside>
 
@@ -462,9 +474,17 @@ export function GameScreen({
             </h1>
             {toolbar}
           </div>
-          <PlayerPanel state={state} name={name} isBot={isBot} compact />
+          <PlayerPanel state={state} name={name} badge={badge} compact />
         </header>
 
+        {g.notice && (
+          <p
+            role="status"
+            className="rounded-xl border border-amber-400/50 bg-amber-400/10 px-3 py-2 text-sm text-amber-200"
+          >
+            {g.notice}
+          </p>
+        )}
         <div className="relative flex min-h-0 flex-1 items-center justify-center">
           <Board
             state={state}
@@ -542,11 +562,11 @@ export function GameScreen({
       )}
       {confirmQuit && (
         <Modal title="Back to the lobby?" onClose={() => setConfirmQuit(false)}>
-          <p className="mb-4 text-sm text-muted">Your game is saved. You can resume it from the lobby.</p>
+          <p className="mb-4 text-sm text-muted">{leaveText}</p>
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={onNewGame}
+              onClick={onLeave}
               className="min-h-11 flex-1 rounded-xl bg-white font-semibold text-ink hover:bg-slate-200"
             >
               Go to lobby
@@ -567,7 +587,7 @@ export function GameScreen({
           result={state.result}
           name={name}
           onRematch={onRematch}
-          onNewGame={onNewGame}
+          onNewGame={onLeave}
           onClose={() => setShowResults(false)}
         />
       )}

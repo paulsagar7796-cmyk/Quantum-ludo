@@ -15,7 +15,7 @@ export function Results({
   state: GameState;
   result: GameResult;
   name: (seat: number) => string;
-  onRematch: () => void;
+  onRematch?: () => void;
   onNewGame: () => void;
   onClose: () => void;
 }) {
@@ -70,13 +70,15 @@ export function Results({
         </table>
       </div>
       <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          onClick={onRematch}
-          className="min-h-11 flex-1 rounded-xl bg-white px-4 font-semibold text-ink hover:bg-slate-200"
-        >
-          Rematch
-        </button>
+        {onRematch && (
+          <button
+            type="button"
+            onClick={onRematch}
+            className="min-h-11 flex-1 rounded-xl bg-white px-4 font-semibold text-ink hover:bg-slate-200"
+          >
+            Rematch
+          </button>
+        )}
         <button
           type="button"
           onClick={onNewGame}
