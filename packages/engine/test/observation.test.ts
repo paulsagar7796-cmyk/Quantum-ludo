@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { legalActions } from "../src";
+import { legalActions, raceLeader } from "../src";
 import { HEADS, apply, game, place, rel, split, types, withRoll } from "./helpers";
 
 // Red (seat 0) has a token split between 20 and 23. Green (seat 1) is to act with a 3.
+// Green is ahead in the race, so Forcing Red costs the usual 1 Q.
 const setup = (mode: "coin" | "choice") =>
-  withRoll(place(split(game({ observationMode: mode }), 0, 0, 18, [20, 23]), 1, [5]), 3, 1);
+  withRoll(place(split(game({ observationMode: mode }), 0, 0, 18, [20, 23]), 1, [30]), 3, 1);
 
 const target = { seat: 0, token: 0 };
 
@@ -64,5 +65,49 @@ describe("Observation in Tactical (choice) mode", () => {
     const { state } = apply(forced, { type: "move", token: 0 });
     expect(state.players[0]!.tokens[0]!.pos).toBe(-1);
     expect(state.players[1]!.score.captures).toBe(3); // a collapsed token is no longer split
+  });
+});
+
+describe("Force is free against the race leader", () => {
+  // Red leads (a split token well along the track); Green has no Q left.
+  const redLeads = (opts: Parameters<typeof game>[0] = {}) => {
+    const s = withRoll(place(split(game(opts), 0, 0, 18, [20, 23]), 1, [5]), 3, 1);
+    s.players[1]!.q = 0;
+    return s;
+  };
+
+  it("lets a player with no Q Force the leader's token, for free", () => {
+    const s = redLeads();
+    expect(raceLeader(s)).toBe(0);
+    expect(legalActions(s)).toContainEqual({ type: "observe", target });
+    const { state, events } = apply(s, { type: "observe", target }, [HEADS]);
+    expect(state.players[1]!.q).toBe(0);
+    expect(events).toContainEqual({ type: "observed", seat: 1, target, mode: "coin", free: true });
+    expect(events.some((e) => e.type === "qSpent")).toBe(false);
+  });
+
+  it("does not spend Q even when the player has some", () => {
+    const s = redLeads();
+    s.players[1]!.q = 2;
+    expect(apply(s, { type: "observe", target }, [HEADS]).state.players[1]!.q).toBe(2);
+  });
+
+  it("is not free when two players are level for the lead", () => {
+    const s = redLeads();
+    place(s, 2, [20]); // Yellow is exactly as far along as Red
+    expect(raceLeader(s)).toBeNull();
+    expect(types(legalActions(s))).not.toContain("observe");
+  });
+
+  it("can be switched off", () => {
+    expect(types(legalActions(redLeads({ rules: { freeForceOnLeader: false } })))).not.toContain("observe");
+  });
+
+  it("ranks the race by tokens home before distance, ignoring finished players", () => {
+    const s = place(game(), 0, [50, 50, 50, 50]);
+    place(s, 1, [56, -1, -1, -1]);
+    expect(raceLeader(s)).toBe(1);
+    s.players[1]!.finished = true;
+    expect(raceLeader(s)).toBe(0);
   });
 });

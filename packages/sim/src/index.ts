@@ -35,6 +35,9 @@ export interface BotStats {
   spent: Record<Mechanic, number>;
   endQ: number;
   tokensHome: number;
+  /** Every Force used, and how many of those were free (aimed at the race leader). */
+  forces: number;
+  freeForces: number;
 }
 
 export interface SimReport {
@@ -63,6 +66,8 @@ const emptyStats = (): BotStats => ({
   spent: { superpose: 0, entangle: 0, ghost: 0, observe: 0 },
   endQ: 0,
   tokensHome: 0,
+  forces: 0,
+  freeForces: 0,
 });
 
 /** Pick the bots for game `g`: rotate the lineup so every bot plays every seat. */
@@ -140,6 +145,10 @@ export function runSimulation(opts: SimOptions): SimReport {
             break;
           case "qSpent":
             statsFor(e.seat).spent[e.mechanic]++;
+            break;
+          case "observed":
+            statsFor(e.seat).forces++;
+            if (e.free) statsFor(e.seat).freeForces++;
             break;
           case "hit":
             report.hits++;

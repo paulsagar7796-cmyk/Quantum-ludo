@@ -22,6 +22,20 @@ export function placement(state: GameState): number[] {
   return [...state.finishOrder, ...rest];
 }
 
+/**
+ * The player clearly ahead in the race right now (most tokens home, then shortest distance),
+ * or null when two or more are level. Finished players are out of the race.
+ */
+export function raceLeader(state: GameState): number | null {
+  const racing = state.players
+    .filter((p) => !p.finished)
+    .sort((a, b) => homeCount(b) - homeCount(a) || distance(a) - distance(b));
+  const [first, second] = racing;
+  if (!first) return null;
+  if (second && homeCount(first) === homeCount(second) && distance(first) === distance(second)) return null;
+  return first.seat;
+}
+
 export function finalScores(state: GameState, ranking: number[] = placement(state)): FinalScore[] {
   const rules = state.config.rules;
   return state.players.map((p) => {

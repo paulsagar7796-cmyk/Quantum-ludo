@@ -24,8 +24,9 @@ export {
   moveTarget,
   mustCollapse,
   canHold,
+  forceIsFree,
   superposeTargets,
   ghostTarget,
 } from "./legal";
 export { applyAction, type ApplyOptions } from "./apply";
-export { buildResult, finalScores, placement } from "./scoring";
+export { buildResult, finalScores, placement, raceLeader } from "./scoring";

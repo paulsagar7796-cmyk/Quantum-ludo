@@ -74,7 +74,8 @@ function print(r: SimReport): void {
       avg(s.spent.superpose, s.seats),
       avg(s.spent.entangle, s.seats),
       avg(s.spent.ghost, s.seats),
-      avg(s.spent.observe, s.seats),
+      avg(s.forces, s.seats),
+      avg(s.freeForces, s.seats),
       avg(s.endQ, s.seats),
     ]);
   }

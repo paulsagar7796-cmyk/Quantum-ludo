@@ -1,4 +1,4 @@
-import { mustCollapse, type Action, type GameEvent, type MarkerIndex } from "@qludo/engine";
+import { forceIsFree, mustCollapse, raceLeader, type Action, type GameEvent, type MarkerIndex } from "@qludo/engine";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { canLink, forceOptions, has, linkableTokens, tokenChoices, type TokenChoice } from "../game/interaction";
 import { COLOR_HEX, MECHANIC } from "../game/labels";
@@ -198,6 +198,7 @@ export function GameScreen({
     setLinkFirst(null);
   };
   let prompt: ReactNode;
+  const forceCost = state.config.rules.freeForceOnLeader ? "1 Q, free on the leader’s tokens" : "1 Q";
   const buttons: ActionButton[] = [];
   const roll = state.roll;
 
@@ -292,11 +293,11 @@ export function GameScreen({
   } else if (mode === "force") {
     prompt = tactical ? (
       <span>
-        <b className="text-force">Force</b> (1 Q): tap the marker where the opponent's token must land.
+        <b className="text-force">Force</b> ({forceCost}): tap the marker where the opponent's token must land.
       </span>
     ) : (
       <span>
-        <b className="text-force">Force</b> (1 Q): tap an opponent's split token. A coin decides where it lands.
+        <b className="text-force">Force</b> ({forceCost}): tap an opponent's split token. A coin decides where it lands.
       </span>
     );
     buttons.push({ id: "cancel", label: "Cancel", tone: "secondary", shortcut: "Esc", onClick: cancel });
@@ -371,7 +372,8 @@ export function GameScreen({
       buttons.push({
         id: "force",
         label: "Force",
-        sub: "free · 1 Q",
+        // Free against the leader's tokens; otherwise 1 Q.
+        sub: forces.every((f) => forceIsFree(state, f.target.seat)) ? "free vs leader" : "1 Q · free vs leader",
         tone: "force",
         shortcut: "F",
         title: MECHANIC.observe.hint,
@@ -434,6 +436,7 @@ export function GameScreen({
   }
   const effects = fx.effects;
   const rollerColor = g.lastRoll ? COLOR_HEX[state.players[g.lastRoll.seat]!.color].base : "#94a3b8";
+  const leader = state.phase === "over" ? null : raceLeader(state);
   const badge = (seat: number): string | null => {
     const kind = g.seatKind(seat);
     if (kind === "bot") return "bot";
@@ -485,7 +488,7 @@ export function GameScreen({
         <p className="text-xs text-muted">
           Round {state.round} · {modeLabel} Force
         </p>
-        <PlayerPanel state={state} name={name} badge={badge} />
+        <PlayerPanel state={state} name={name} badge={badge} leader={leader} />
         <div className="mt-auto">{toolbar}</div>
       </aside>
 
@@ -501,7 +504,7 @@ export function GameScreen({
             </h1>
             {toolbar}
           </div>
-          <PlayerPanel state={state} name={name} badge={badge} compact />
+          <PlayerPanel state={state} name={name} badge={badge} leader={leader} compact />
         </header>
 
         {g.notice && (

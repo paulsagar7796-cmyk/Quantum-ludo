@@ -6,7 +6,7 @@ Quantum Ludo is a quantum-inspired take on the family board game. You still roll
 
 It is built as a competition. The aim is to reward strategic thinking, good decisions under uncertainty, probability awareness and the ability to adapt when the board changes. This isn't about waiting on a lucky roll. It turns a family game of chance into a ruthless tactical knife fight. Manage your economy, manipulate probability, and collapse the board to your advantage
 
-> **Status:** playable in the browser: hot-seat, bots, and same-Wi-Fi multiplayer. Rules are draft v0.2, balance-tested with bot simulations. Online rooms are next.
+> **Status:** playable in the browser: hot-seat, bots, and same-Wi-Fi multiplayer. Rules are draft v0.3, balance-tested with bot simulations. Online rooms are next.
 
 ## Contents
 - [Highlights](#highlights)
@@ -84,7 +84,11 @@ The price of that protection:
 When the drift ends, the token simply becomes solid where it stands. If it is sharing a square with an opponent, the next token to land there captures every lone token on it.
 
 ### 4. Observation(Force)
-Pick an opponent's superposed token and force it to collapse now. Force is a **free action**: you still make your move with the same roll. The Observation mode is chosen in the lobby:
+Pick an opponent's superposed token and force it to collapse now. Force is a **free action**: you still make your move with the same roll.
+
+**Catch-up rule:** Force costs **no Q** when the target belongs to the **race leader**, the one player clearly ahead (most tokens home, then shortest distance to home; nobody counts as leader while players are level). The leader is marked in the player list. Forcing the leader's token onto a square where rivals can hit it is how the table gangs up on whoever is winning.
+
+The Observation mode is chosen in the lobby:
 
 | | **Chaos mode** | **Tactical mode** |
 |---|---|---|
@@ -92,7 +96,7 @@ Pick an opponent's superposed token and force it to collapse now. Force is a **f
 | Signature play | Gamble on where it lands, then react | **Measure then strike**: force the token onto a square your roll reaches, then capture it with no coin flip |
 | Feel | Gamble, swings and upsets | Calculation, forcing the opponent onto the worst square |
 
-Superposition (your own choice when you collapse) and the 50% hit coin are the same in both modes. You can Force at most once per roll.
+Superposition (your own choice when you collapse) and the 50% hit coin are the same in both modes. You can Force at most once per roll, and it costs 1 Q unless the target belongs to the race leader.
 
 ## Turn sequence
 1. **Upkeep:** collapse your own superposed token (you choose the marker) or hold it open one more round, and optionally break an entanglement.
@@ -111,7 +115,7 @@ Superposition (your own choice when you collapse) and the 50% hit coin are the s
 - A Ghost move must stay on the shared track: it can never enter the home column.
 - A marker on a safe square cannot be hit.
 - Retreats (for example an entangled partner being knocked back) never capture.
-- You cannot spend Q you do not have, and Q above 4 is lost.
+- You cannot spend Q you do not have, and Q above 4 is lost. The one exception is Force on the race leader's tokens, which needs no Q.
 
 ## Scoring
 

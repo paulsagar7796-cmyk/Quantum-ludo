@@ -36,12 +36,15 @@ export function PlayerPanel({
   state,
   name,
   badge,
+  leader = null,
   compact,
 }: {
   state: GameState;
   name: (seat: number) => string;
   /** Small tag after the name: "bot", "remote", "offline". */
   badge: (seat: number) => string | null;
+  /** The race leader, marked so players know whose tokens Force targets for free. */
+  leader?: number | null;
   compact?: boolean;
 }) {
   const maxQ = state.config.rules.maxQ;
@@ -70,6 +73,28 @@ export function PlayerPanel({
                   {badge(p.seat)}
                 </span>
               )}
+              {leader === p.seat &&
+                (compact ? (
+                  // Narrow cards: a crown keeps the name readable.
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={14}
+                    height={14}
+                    className="ml-auto shrink-0 text-amber-300"
+                    role="img"
+                    aria-label="Race leader"
+                  >
+                    <title>Race leader: Force on their tokens is free</title>
+                    <path fill="currentColor" d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5L3 7z" />
+                  </svg>
+                ) : (
+                  <span
+                    className="ml-auto shrink-0 rounded bg-amber-300/20 px-1 text-[10px] uppercase tracking-wide text-amber-200"
+                    title="Race leader: Force on their tokens is free"
+                  >
+                    leader
+                  </span>
+                ))}
             </div>
             <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted">
               <QPips q={p.q} max={maxQ} />

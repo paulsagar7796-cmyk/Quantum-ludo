@@ -11,7 +11,7 @@ import {
 } from "./board";
 import { HOME_COLUMN_START, HOME_POS, YARD } from "./constants";
 import { cloneState, freshFlags } from "./create";
-import { currentPlayer, ghostTarget, isLegal, moveTarget, superposeTargets } from "./legal";
+import { currentPlayer, forceIsFree, ghostTarget, isLegal, moveTarget, superposeTargets } from "./legal";
 import { flipCoin, rollDie } from "./rng";
 import { buildResult } from "./scoring";
 import type {
@@ -151,9 +151,11 @@ function gainQ(ctx: Ctx, player: PlayerState, reason: "node" | "captured", squar
 function doObserve(ctx: Ctx, player: PlayerState, target: TokenRef, chosen: MarkerIndex | undefined): void {
   const { s } = ctx;
   const mode = s.config.observationMode;
-  spend(ctx, player, "observe");
+  // Decide the price before the collapse changes who is leading.
+  const free = forceIsFree(s, target.seat);
+  if (!free) spend(ctx, player, "observe");
   s.flags.observed = true;
-  ctx.events.push({ type: "observed", seat: player.seat, target, mode });
+  ctx.events.push({ type: "observed", seat: player.seat, target, mode, free });
   const marker: MarkerIndex = mode === "choice" ? chosen! : flipCoin(ctx.rng) ? 0 : 1;
   // Force is a free action in both modes: the observer still has their roll to use.
   collapse(ctx, playerAt(s, target.seat), target.token, marker, "observe");
